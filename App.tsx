@@ -10,6 +10,7 @@ import CalmZoneScreen from './screens/CalmZoneScreen';
 import KindnessScreen from './screens/KindnessScreen';
 import ReflectionScreen from './screens/ReflectionScreen';
 import StoryCreatorScreen from './screens/StoryCreatorScreen';
+import RapBattleScreen from './screens/RapBattleScreen';
 import Toast from './components/Toast';
 import WelcomeScreen from './screens/LanguageSelectionScreen';
 
@@ -67,6 +68,8 @@ const App: React.FC = () => {
         return <ReflectionScreen />;
       case Screen.StoryCreator:
         return <StoryCreatorScreen />;
+      case Screen.RapBattle:
+        return <RapBattleScreen />;
       default:
         return <HomeScreen />;
     }

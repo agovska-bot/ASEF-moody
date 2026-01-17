@@ -138,43 +138,35 @@ const HomeScreen: React.FC = () => {
           }
         `}</style>
 
-        {/* 1. Header & Identity - Centered logo and text on the same horizontal axis */}
+        {/* 1. Header & Identity */}
         <div className="flex flex-col items-center text-center pt-2 mb-8 relative z-10">
             <div className="flex flex-row items-center justify-center gap-1">
-              {/* Logo Container - Vertical centering optimized */}
               <div className="relative flex items-center justify-center h-24 w-24">
                 <svg viewBox="0 0 85 55" className="w-full h-full drop-shadow-md" xmlns="http://www.w3.org/2000/svg">
                   <path d="M45.7,21.9c0-12.1-9.8-21.9-21.9-21.9S2,9.8,2,21.9c0,9.1,5.6,16.9,13.6,20.2l-0.7,5.7c-0.1,0.8,0.5,1.5,1.3,1.5c0.1,0,0.2,0,0.3-0.1l7.3-5.2c1.3,0.2,2.6,0.2,4,0.2C35.9,43.8,45.7,34,45.7,21.9z" fill="#50C878" stroke="#004D40" strokeWidth="3" />
+                  {/* Fixed duplicate cx attribute by changing second cx to cy */}
                   <circle className="buddy-eye-home" cx="15.8" cy="20.5" r="3" fill="#004D40" />
                   <circle className="buddy-eye-home" cx="32.8" cy="20.5" r="3" fill="#004D40" />
                   <path d="M18.8,29.5c0,0,3,4,8,0" fill="none" stroke="#004D40" strokeWidth="3" strokeLinecap="round" />
-                  {/* Plus Icon */}
                   <g transform="translate(42, 26) scale(0.68)">
                     <path d="M15,2v26 M2,15h26" fill="none" stroke="#004D40" strokeWidth="17" strokeLinecap="round"/>
                     <path d="M15,2v26 M2,15h26" fill="none" stroke="#FFCB05" strokeWidth="11" strokeLinecap="round"/>
                   </g>
                 </svg>
               </div>
-
-              {/* Title - Aligned vertically in center with logo */}
               <div className="flex flex-col items-start leading-[0.85] ml-1">
                   <span className="text-[2.2rem] font-black text-[#004D40] tracking-tighter">Moody</span>
                   <span className="text-[2.2rem] font-black text-[#004D40] tracking-tighter">Buddy</span>
               </div>
             </div>
-
-            {/* Subtitle - Closer to logo and text */}
             <p className="text-[12px] font-black text-teal-800 uppercase tracking-[0.15em] mt-1">
               {t('home.subtitle')}
             </p>
         </div>
 
         <div className="space-y-6 relative z-10">
-          
-          {/* 2. Top Section: Emotional Check-in & Stats */}
           <section className="bg-white/40 backdrop-blur-md rounded-3xl p-4 border border-white/60 shadow-inner">
               <PointsSummary />
-              
               <button
                   onClick={() => setCurrentScreen(Screen.MoodCheck)}
                   className="w-full p-6 mt-4 rounded-2xl flex items-center space-x-4 text-white bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 shadow-xl shadow-orange-200 hover:shadow-orange-300 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 animate-living-flame group relative overflow-hidden text-left"
@@ -190,7 +182,6 @@ const HomeScreen: React.FC = () => {
               </button>
           </section>
 
-          {/* 3. Divider Header */}
           <div className="flex items-center gap-4 px-2">
               <div className="h-px bg-teal-200 flex-grow"></div>
               <h2 className="text-xs font-black text-teal-800 uppercase tracking-[0.2em] whitespace-nowrap">
@@ -199,97 +190,65 @@ const HomeScreen: React.FC = () => {
               <div className="h-px bg-teal-200 flex-grow"></div>
           </div>
 
-          {/* 4. Bottom Section: Activity Hub */}
           <div className="grid grid-cols-1 gap-4">
-            {ageGroup === '7-9' ? (
-              <>
+            <AnimatedTaskCard 
+                title={t(`${ageGroupKey}.story_creator_title`)}
+                description={t(`${ageGroupKey}.story_creator_description`)}
+                icon="📖"
+                color={theme.storyCreator}
+                animationType="story-bubbles"
+                onClick={() => setCurrentScreen(Screen.StoryCreator)}
+            />
+            
+            {/* Added Rap Battle to Activity Hub */}
+            <div className="grid grid-cols-2 gap-4">
                 <AnimatedTaskCard 
-                    title={t(`${ageGroupKey}.story_creator_title`)}
-                    description={t(`${ageGroupKey}.story_creator_description`)}
-                    icon="📖"
-                    color={theme.storyCreator}
-                    animationType="story-bubbles"
-                    onClick={() => setCurrentScreen(Screen.StoryCreator)}
+                    title={t(`${ageGroupKey}.rap_battle_title`)}
+                    icon="🎤"
+                    color={theme.rapBattle}
+                    isGrid={true}
+                    animationType="mood-bubbles"
+                    onClick={() => setCurrentScreen(Screen.RapBattle)}
                 />
                 <AnimatedTaskCard 
                     title={t(`${ageGroupKey}.gratitude_jar_title`)}
-                    description={t(`${ageGroupKey}.gratitude_jar_description`)}
                     icon="🌟"
                     color={theme.gratitude}
+                    isGrid={true}
                     animationType="rising-stars"
                     onClick={() => setCurrentScreen(Screen.Gratitude)}
                 />
-                <div className="grid grid-cols-2 gap-4">
-                    <AnimatedTaskCard 
-                        title={t(`${ageGroupKey}.get_moving_title`)}
-                        icon="💪"
-                        color={theme.move}
-                        isGrid={true}
-                        animationType="running-man"
-                        onClick={() => setCurrentScreen(Screen.Move)}
-                    />
-                    <AnimatedTaskCard 
-                        title={t(`${ageGroupKey}.kindness_act_title`)}
-                        icon="💖"
-                        color={theme.kindness}
-                        isGrid={true}
-                        animationType="fireworks"
-                        onClick={() => setCurrentScreen(Screen.Kindness)}
-                    />
-                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
                 <AnimatedTaskCard 
-                    title={t(`${ageGroupKey}.calm_zone_title`)}
-                    description={t(`${ageGroupKey}.calm_zone_description`)}
-                    icon="🌬️"
-                    color={theme.calmZone}
-                    animationType="floating-cloud"
-                    onClick={() => setCurrentScreen(Screen.CalmZone)}
+                    title={t(`${ageGroupKey}.get_moving_title`)}
+                    icon="💪"
+                    color={theme.move}
+                    isGrid={true}
+                    animationType="running-man"
+                    onClick={() => setCurrentScreen(Screen.Move)}
                 />
-              </>
-            ) : (
-               <>
-                  <TaskCard 
-                      title={t(`${ageGroupKey}.story_creator_title`)}
-                      description={t(`${ageGroupKey}.story_creator_description`)}
-                      icon="📖"
-                      color={theme.storyCreator}
-                      onClick={() => setCurrentScreen(Screen.StoryCreator)}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                      <TaskCard 
-                          title={t(`${ageGroupKey}.gratitude_jar_title`)}
-                          icon="🌟"
-                          color={theme.gratitude}
-                          isGrid={true}
-                          onClick={() => setCurrentScreen(Screen.Gratitude)}
-                      />
-                      <TaskCard 
-                          title={t(`${ageGroupKey}.get_moving_title`)}
-                          icon="💪"
-                          color={theme.move}
-                          isGrid={true}
-                          onClick={() => setCurrentScreen(Screen.Move)}
-                      />
-                  </div>
-                   <TaskCard 
-                      title={t(`${ageGroupKey}.kindness_act_title`)}
-                      description={t(`${ageGroupKey}.kindness_act_description`)}
-                      icon="💖"
-                      color={theme.kindness}
-                      onClick={() => setCurrentScreen(Screen.Kindness)}
-                  />
-                   <TaskCard 
-                      title={t(`${ageGroupKey}.calm_zone_title`)}
-                      description={t(`${ageGroupKey}.calm_zone_description`)}
-                      icon="🌬️"
-                      color={theme.calmZone}
-                      onClick={() => setCurrentScreen(Screen.CalmZone)}
-                  />
-              </>
-            )}
+                <AnimatedTaskCard 
+                    title={t(`${ageGroupKey}.kindness_act_title`)}
+                    icon="💖"
+                    color={theme.kindness}
+                    isGrid={true}
+                    animationType="fireworks"
+                    onClick={() => setCurrentScreen(Screen.Kindness)}
+                />
+            </div>
+
+            <AnimatedTaskCard 
+                title={t(`${ageGroupKey}.calm_zone_title`)}
+                description={t(`${ageGroupKey}.calm_zone_description`)}
+                icon="🌬️"
+                color={theme.calmZone}
+                animationType="floating-cloud"
+                onClick={() => setCurrentScreen(Screen.CalmZone)}
+            />
           </div>
 
-          {/* 5. Quick Access to Journal */}
           <div className="pt-2">
               <AnimatedTaskCard
                   onClick={() => setCurrentScreen(Screen.Reflection)}
