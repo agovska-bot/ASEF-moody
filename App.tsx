@@ -19,17 +19,20 @@ const App: React.FC = () => {
   const [keyMissing, setKeyMissing] = useState(false);
 
   useEffect(() => {
+    // Check for a valid key. 
+    // Vite's 'define' replaces process.env.API_KEY with a string literal during build.
     const apiKey = (process.env.API_KEY || "").trim();
-    const isPlaceholder = apiKey === "YOUR_API_KEY" || apiKey === "undefined" || apiKey === "null";
+    const isPlaceholder = apiKey === "" || apiKey === "YOUR_API_KEY" || apiKey === "undefined" || apiKey === "null";
     
-    if (!apiKey || apiKey === "" || isPlaceholder) {
+    if (isPlaceholder) {
       setKeyMissing(true);
-      console.error("[Moody Buddy] CRITICAL: Valid API_KEY is missing from build!");
+      console.error("[Moody Buddy] CRITICAL: API_KEY is missing or invalid in the build environment.");
     } else {
       setKeyMissing(false);
-      // Log sanitized info for debugging
-      const obscuredKey = `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 2)}`;
-      console.log(`[Moody Buddy] AI Connected (Format: ${obscuredKey}, Length: ${apiKey.length})`);
+      const obscuredKey = apiKey.length > 8 
+        ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` 
+        : "***";
+      console.log(`[Moody Buddy] AI System Initialized. Key: ${obscuredKey} (Len: ${apiKey.length})`);
     }
   }, []);
 
@@ -80,8 +83,9 @@ const App: React.FC = () => {
   return (
     <div className={`${getBackgroundColor()} min-h-screen font-sans relative`}>
       {keyMissing && (
-        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[10px] py-1 px-2 z-[9999] text-center font-bold uppercase tracking-widest shadow-lg">
-          ⚠️ AI Offline: Invalid API_KEY (Check Vercel Environment Variables)
+        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[11px] py-1.5 px-4 z-[9999] text-center font-bold uppercase tracking-wider shadow-xl flex items-center justify-center gap-2">
+          <span>⚠️ AI OFFLINE</span>
+          <span className="opacity-80 font-normal normal-case">Check Vercel Environment Variables (API_KEY)</span>
         </div>
       )}
       {renderContent()}

@@ -28,18 +28,18 @@ const MoodCheckScreen: React.FC = () => {
   };
 
   const generateBuddySupport = async (mood: Mood, userNote: string) => {
-    const rawKey = process.env.API_KEY || "";
-    const apiKey = rawKey.trim();
-
-    if (!apiKey) {
-      console.error("Gemini API Key is missing");
-      showToast("Buddy's brain is not connected.");
+    // Check if the key is effectively missing before attempting the call.
+    if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
+      console.error("Gemini API Key is missing in process.env.API_KEY");
+      showToast("Buddy's brain is not connected. (Missing API Key)");
       return null;
     }
 
     setIsGeneratingResponse(true);
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      // Initialize directly with the environment variable as per SDK requirements.
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
       let languageInstruction = "Write in English.";
       if (language === 'mk') {
         languageInstruction = "Одговори исклучиво на македонски јазик. БИДИ ЕКСТРЕМНО СТРОГ СО ГРАМАТИКАТА. Користи топол јазик соодветен за дете.";
@@ -55,7 +55,7 @@ const MoodCheckScreen: React.FC = () => {
         config: { temperature: 0.8 }
       });
       
-      return response.text.trim();
+      return response.text?.trim() || null;
     } catch (error) {
       console.error("Gemini API Error:", error);
       showToast("Buddy is taking a nap. Try again in a bit!");

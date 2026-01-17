@@ -17,8 +17,9 @@ const GratitudeScreen: React.FC = () => {
 
   const getNewTask = useCallback(async () => {
     setIsLoading(true);
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
+    
+    // Safety check for API key
+    if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
       const fallbackTasks = t('gratitude_screen.fallback_tasks');
       setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
       setIsLoading(false);
@@ -26,7 +27,7 @@ const GratitudeScreen: React.FC = () => {
     }
 
     try {
-      const ai = new GoogleGenAI({apiKey: apiKey});
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const topics = ["a color", "a song", "a feeling", "a friend", "funny moment", "tasty food", "nature", "happy memory"];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
@@ -38,8 +39,9 @@ const GratitudeScreen: React.FC = () => {
         contents: prompt,
         config: { temperature: 1.0 }
       });
-      setTask(response.text.trim());
+      setTask(response.text?.trim() || "Think of something nice!");
     } catch (error) {
+      console.error("Gemini Gratitude Error:", error);
       const fallbackTasks = t('gratitude_screen.fallback_tasks');
       setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
     } finally {
@@ -71,9 +73,12 @@ const GratitudeScreen: React.FC = () => {
         
         <div className="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10 mx-4">
           {isLoading ? (
-            <p className={`text-xl ${theme.text} animate-pulse`}>
-              {language === 'mk' ? 'Смислувам нешто убаво...' : t('gratitude_screen.loading')}
-            </p>
+            <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-4 border-amber-300 border-t-amber-600 rounded-full animate-spin"></div>
+                <p className={`text-xl ${theme.text} animate-pulse mt-2`}>
+                    {language === 'mk' ? 'Смислувам нешто убаво...' : t('gratitude_screen.loading')}
+                </p>
+            </div>
           ) : (
             <p className={`text-xl font-bold ${theme.text}`}>{task}</p>
           )}

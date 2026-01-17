@@ -17,15 +17,15 @@ const MoveScreen: React.FC = () => {
 
   const getNewTask = useCallback(async () => {
       setIsLoading(true);
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) {
+      
+      if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
         setTask(t('move_screen.fallback_tasks')[0]);
         setIsLoading(false);
         return;
       }
 
       try {
-        const ai = new GoogleGenAI({apiKey: apiKey});
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const themes = ["animal", "superhero", "robot", "slow motion", "balance", "sports", "silly walk", "stretch", "jumping"];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
@@ -37,8 +37,9 @@ const MoveScreen: React.FC = () => {
           contents: prompt,
           config: { temperature: 1.0 }
         });
-        setTask(response.text.trim());
+        setTask(response.text?.trim() || "Let's move!");
       } catch (error) {
+        console.error("Gemini Move Error:", error);
         setTask(t('move_screen.fallback_tasks')[0]);
       } finally {
         setIsLoading(false);
@@ -69,9 +70,12 @@ const MoveScreen: React.FC = () => {
 
         <div className="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10 mx-4">
            {isLoading ? (
-             <p className={`text-xl ${theme.text} animate-pulse`}>
-               {language === 'mk' ? 'Смислувам активност...' : t('move_screen.loading')}
-             </p>
+             <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-4 border-lime-300 border-t-lime-600 rounded-full animate-spin"></div>
+                <p className={`text-xl ${theme.text} animate-pulse mt-2`}>
+                    {language === 'mk' ? 'Смислувам активност...' : t('move_screen.loading')}
+                </p>
+             </div>
            ) : (
              <p className={`text-xl font-bold ${theme.text}`}>{task}</p>
            )}

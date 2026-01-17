@@ -131,19 +131,19 @@ const RapBattleScreen: React.FC = () => {
 
   const generateRap = async () => {
     if (!name.trim() || !mood.trim()) return;
+    
+    // Safety check
+    if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
+        showToast("AI is offline. (Missing API Key)");
+        return;
+    }
+
     setIsLoading(true);
     setAudioData(null);
     stopPlayback();
 
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-        showToast("Key missing!");
-        setIsLoading(false);
-        return;
-    }
-
     try {
-        const ai = new GoogleGenAI({apiKey: apiKey});
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         let langCode = language === 'mk' ? "Macedonian" : (language === 'tr' ? "Turkish" : "English");
         
         const prompt = `You are Buddy, a cool rhythmic rapper. Write a short 4-line rap for ${name} who is feeling ${mood}. Use simple rhymes. Language: ${langCode}. Output only the lyrics.`;
@@ -154,7 +154,7 @@ const RapBattleScreen: React.FC = () => {
             config: { temperature: 1.0 }
         });
 
-        const lyrics = textRes.text.trim();
+        const lyrics = textRes.text?.trim() || "";
         setRapLyrics(lyrics);
 
         const audioRes = await ai.models.generateContent({
@@ -170,7 +170,8 @@ const RapBattleScreen: React.FC = () => {
         if (base64Audio) setAudioData(base64Audio);
 
     } catch (error) {
-        showToast("Mic failed!");
+        console.error("Rap Battle AI Error:", error);
+        showToast("Mic failed! Check connection.");
     } finally {
         setIsLoading(false);
     }
@@ -227,15 +228,18 @@ const RapBattleScreen: React.FC = () => {
                     <div className="text-6xl animate-bounce">🎤</div>
                     <input placeholder={t('rap_battle_screen.name_placeholder')} value={name} onChange={e=>setName(e.target.value)} className="w-full p-3 border-2 rounded-xl text-center" />
                     <input placeholder={t('rap_battle_screen.mood_placeholder')} value={mood} onChange={e=>setMood(e.target.value)} className="w-full p-3 border-2 rounded-xl text-center" />
-                    <button onClick={generateRap} disabled={isLoading || !name || !mood} className="w-full bg-fuchsia-600 text-white font-bold py-3 rounded-xl">{isLoading ? '...' : t('rap_battle_screen.generate_button')}</button>
+                    <button onClick={generateRap} disabled={isLoading || !name || !mood} className="w-full bg-fuchsia-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+                        {isLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                        {isLoading ? 'Dropping beats...' : t('rap_battle_screen.generate_button')}
+                    </button>
                 </div>
             ) : (
                 <div className="space-y-6">
                     <p className="text-lg italic whitespace-pre-line">{rapLyrics}</p>
-                    <button onClick={playRapWithBeat} className={`w-full py-4 rounded-xl font-bold text-white ${isPlaying ? 'bg-red-500' : 'bg-fuchsia-600'}`}>
+                    <button onClick={playRapWithBeat} className={`w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all ${isPlaying ? 'bg-red-500' : 'bg-fuchsia-600'}`}>
                         {isPlaying ? 'Stop' : 'Play Rap Song! 🎵'}
                     </button>
-                    <button onClick={() => setRapLyrics('')} className="text-gray-500 underline">Try Again</button>
+                    <button onClick={() => setRapLyrics('')} className="text-gray-500 underline text-sm">Try Again</button>
                 </div>
             )}
         </div>
