@@ -29,7 +29,10 @@ const MoodCheckScreen: React.FC = () => {
 
   const generateBuddySupport = async (mood: Mood, userNote: string) => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) return null;
+    if (!apiKey) {
+      showToast("Buddy's brain is not connected (API Key missing).");
+      return null;
+    }
     setIsGeneratingResponse(true);
     try {
       const ai = new GoogleGenAI({ apiKey });
@@ -47,6 +50,8 @@ const MoodCheckScreen: React.FC = () => {
       });
       return response.text.trim();
     } catch (error) {
+      console.error("Gemini Error:", error);
+      showToast("Buddy is having a moment... try again later!");
       return null;
     } finally {
       setIsGeneratingResponse(false);
@@ -57,8 +62,12 @@ const MoodCheckScreen: React.FC = () => {
     if (selectedMood) {
       const response = await generateBuddySupport(selectedMood, note);
       addMood({ mood: selectedMood, note: note, date: new Date().toISOString() });
-      if (response) setBuddyResponse(response);
-      else setCurrentScreen(Screen.Home);
+      if (response) {
+        setBuddyResponse(response);
+      } else {
+        // If AI fails, still save mood but go back home
+        setCurrentScreen(Screen.Home);
+      }
     }
   };
 

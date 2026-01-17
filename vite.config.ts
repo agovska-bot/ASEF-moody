@@ -1,13 +1,15 @@
+
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, '.', '');
+  const env = loadEnv(mode, process.cwd(), '');
   
-  // Robustly check for the key in different places (Vercel uses API_KEY, local .env might use VITE_API_KEY)
-  const apiKey = env.API_KEY || env.VITE_API_KEY || process.env.API_KEY;
+  // Vercel sets variables in process.env during the build command.
+  // We check local .env (VITE_API_KEY), Vercel env (API_KEY), and system process.env.
+  const apiKey = env.API_KEY || process.env.API_KEY || env.VITE_API_KEY || "";
 
   return {
     plugins: [react()],
@@ -15,7 +17,8 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
     },
     define: {
-      // Inject the key safely into the client-side code
+      // Inject the key safely into the client-side code. 
+      // Using an empty string fallback prevents build crashes if the key is missing.
       'process.env.API_KEY': JSON.stringify(apiKey),
     },
   }
