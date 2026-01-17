@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   
   // Vercel sets variables in process.env during the build command.
   // We prioritize process.env.API_KEY which is where Vercel injects it.
+  // Also check for VITE_ prefixed version as a backup.
   const apiKey = process.env.API_KEY || env.API_KEY || env.VITE_API_KEY || "";
 
   return {

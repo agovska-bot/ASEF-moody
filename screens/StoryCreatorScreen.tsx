@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { useAppContext } from '../context/AppContext';
 import ScreenWrapper from '../components/ScreenWrapper';
@@ -17,13 +17,16 @@ const StoryCreatorScreen: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isStoryFinished, setIsStoryFinished] = useState(false);
     const [streamingText, setStreamingText] = useState('');
+    const initRef = useRef(false);
 
     const currentAgeKey = ageGroup || '7-9';
     const screenTitle = t(`home.age_${currentAgeKey}.story_creator_title`);
 
     const handleStartNewStory = useCallback(async () => {
-        if (!process.env.API_KEY) {
-            showToast("Buddy's imagination is offline (Missing API Key).");
+        const apiKey = process.env.API_KEY;
+        if (!apiKey || apiKey === "" || apiKey === "undefined") {
+            showToast("Buddy's imagination is offline (Missing API Key). Check Vercel settings.");
+            setIsLoading(false);
             return;
         }
 
@@ -32,13 +35,13 @@ const StoryCreatorScreen: React.FC = () => {
         setStreamingText('');
         
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: apiKey });
             
             let languageInstruction = "Use simple, clear English.";
             if (language === 'mk') languageInstruction = "Одговори на македонски јазик. Користи јасен и едноставен јазик соодветен за дете.";
             if (language === 'tr') languageInstruction = "Use clear, simple Turkish language.";
             
-            const systemInstruction = `You are a creative co-writer for a ${age}-year-old. Adjust tone to match this age. Start a new story one sentence at a time. ${languageInstruction} Never break character.`;
+            const systemInstruction = `You are a creative co-writer for a ${age}-year-old child. Your name is Buddy. Adjust tone to match this age. Start a new story one sentence at a time. ${languageInstruction} Never break character.`;
 
             const newChat = ai.chats.create({
                 model: 'gemini-3-flash-preview',
@@ -48,7 +51,7 @@ const StoryCreatorScreen: React.FC = () => {
                 }
             });
             
-            const response = await newChat.sendMessage({ message: `Start a new story for a ${age}-year-old. Give me just one exciting first sentence.` });
+            const response = await newChat.sendMessage({ message: `Start a new story for a ${age}-year-old. Give me just one exciting first sentence to start our adventure.` });
             const firstSentence = response.text.trim();
             startNewStory(newChat, firstSentence);
         } catch (error) {
@@ -60,13 +63,16 @@ const StoryCreatorScreen: React.FC = () => {
     }, [age, language, startNewStory, showToast]);
 
     useEffect(() => {
-        if (storyInProgress.length === 0 && !isStoryFinished) {
+        // Only start if there is no story in progress and we haven't already tried to initialize in this session
+        if (storyInProgress.length === 0 && !isStoryFinished && !initRef.current) {
+            initRef.current = true;
             handleStartNewStory();
         }
     }, [handleStartNewStory, storyInProgress.length, isStoryFinished]);
 
     const handleAddSentence = async () => {
-        if (!userInput.trim() || !chatSession || !process.env.API_KEY) return;
+        const apiKey = process.env.API_KEY;
+        if (!userInput.trim() || !chatSession || !apiKey) return;
         
         setIsLoading(true);
         const currentInput = userInput;
@@ -97,7 +103,8 @@ const StoryCreatorScreen: React.FC = () => {
     };
     
     const handleFinishStory = async () => {
-        if (!chatSession || !process.env.API_KEY) return;
+        const apiKey = process.env.API_KEY;
+        if (!chatSession || !apiKey) return;
 
         setIsLoading(true);
         setStreamingText('');
@@ -206,7 +213,10 @@ const StoryCreatorScreen: React.FC = () => {
                          <h3 className="text-2xl font-bold text-rose-600">{t('story_creator_screen.end_title')}</h3>
                          <p className="text-gray-700 my-2">{t('story_creator_screen.end_subtitle')}</p>
                          <button
-                            onClick={handleStartNewStory}
+                            onClick={() => {
+                                initRef.current = false;
+                                handleStartNewStory();
+                            }}
                             className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-lg transition`}
                         >
                             {t('story_creator_screen.another_story_button')}
