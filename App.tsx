@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppContext } from './context/AppContext';
 import { Screen } from './types';
 import HomeScreen from './screens/HomeScreen';
@@ -15,12 +15,19 @@ import WelcomeScreen from './screens/LanguageSelectionScreen';
 
 const App: React.FC = () => {
   const { currentScreen, toastMessage, ageGroup, language, birthDate } = useAppContext();
+  const [keyMissing, setKeyMissing] = useState(false);
 
   useEffect(() => {
-    // Hidden debug info for the developers to check API key status in console
-    const hasKey = !!process.env.API_KEY;
-    console.log(`[Moody Buddy] System check: Language=${language}, BirthDate=${birthDate}, AI_Connected=${hasKey}`);
-  }, [language, birthDate]);
+    // Logic to detect if the key was actually injected as a non-empty string
+    const apiKey = process.env.API_KEY;
+    if (!apiKey || apiKey === "" || apiKey === "undefined") {
+      setKeyMissing(true);
+      console.error("[Moody Buddy] CRITICAL: API_KEY is missing from build!");
+    } else {
+      setKeyMissing(false);
+      console.log(`[Moody Buddy] AI Connected (Key length: ${apiKey.length})`);
+    }
+  }, []);
 
   const getBackgroundColor = () => {
     if (!ageGroup) return 'bg-amber-50';
@@ -66,7 +73,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`${getBackgroundColor()} min-h-screen font-sans`}>
+    <div className={`${getBackgroundColor()} min-h-screen font-sans relative`}>
+      {keyMissing && (
+        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[10px] py-1 px-2 z-[9999] text-center font-bold uppercase tracking-widest shadow-lg">
+          ⚠️ AI Offline: API_KEY not detected in Vercel settings
+        </div>
+      )}
       {renderContent()}
       {toastMessage && <Toast message={toastMessage} />}
     </div>

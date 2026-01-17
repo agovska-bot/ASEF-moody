@@ -22,48 +22,42 @@ const StoryCreatorScreen: React.FC = () => {
     const screenTitle = t(`home.age_${currentAgeKey}.story_creator_title`);
 
     const handleStartNewStory = useCallback(async () => {
+        if (!process.env.API_KEY) {
+            showToast("Buddy's imagination is offline (Missing API Key).");
+            return;
+        }
+
         setIsLoading(true);
         setIsStoryFinished(false);
         setStreamingText('');
-        const apiKey = process.env.API_KEY;
-        if (!apiKey) {
-            const dummyChat = {} as Chat;
-            startNewStory(dummyChat, "Once upon a time, in a land filled with candy clouds...");
-            setIsLoading(false);
-            return;
-        }
-        
-        let languageInstruction = "Use simple, clear English.";
-        if (language === 'mk') languageInstruction = "Use clear, simple Macedonian language.";
-        if (language === 'tr') languageInstruction = "Use clear, simple Turkish language.";
-        
-        const systemInstruction = `You are a creative co-writer and storyteller. You are writing a story together with a user who is exactly ${age} years old. 
-        Adjust your tone, vocabulary, and themes to match a ${age}-year-old. 
-        - If they are a child, make it whimsical and adventurous. 
-        - If they are a teenager, make it relatable, perhaps with elements of mystery, sci-fi, or personal growth. 
-        - If they are an adult, use more sophisticated imagery and mature narrative structures.
-        Continue the story one sentence at a time. ${languageInstruction} Never break character.`;
-
-        const ai = new GoogleGenAI({apiKey: apiKey});
-        const newChat = ai.chats.create({
-            model: 'gemini-3-flash-preview',
-            config: {
-                systemInstruction: systemInstruction,
-                temperature: 0.8,
-            }
-        });
         
         try {
-            const response = await newChat.sendMessage({ message: `Start a new story appropriate for a ${age}-year-old. Give me just one exciting first sentence to begin.` });
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            
+            let languageInstruction = "Use simple, clear English.";
+            if (language === 'mk') languageInstruction = "Одговори на македонски јазик. Користи јасен и едноставен јазик соодветен за дете.";
+            if (language === 'tr') languageInstruction = "Use clear, simple Turkish language.";
+            
+            const systemInstruction = `You are a creative co-writer for a ${age}-year-old. Adjust tone to match this age. Start a new story one sentence at a time. ${languageInstruction} Never break character.`;
+
+            const newChat = ai.chats.create({
+                model: 'gemini-3-flash-preview',
+                config: {
+                    systemInstruction: systemInstruction,
+                    temperature: 0.8,
+                }
+            });
+            
+            const response = await newChat.sendMessage({ message: `Start a new story for a ${age}-year-old. Give me just one exciting first sentence.` });
             const firstSentence = response.text.trim();
             startNewStory(newChat, firstSentence);
         } catch (error) {
             console.error("Error starting story:", error);
-            startNewStory(newChat, "Once upon a time, in a land filled with candy clouds...");
+            showToast("Buddy is sleepy. Let's try again in a moment.");
         } finally {
             setIsLoading(false);
         }
-    }, [age, language, startNewStory]);
+    }, [age, language, startNewStory, showToast]);
 
     useEffect(() => {
         if (storyInProgress.length === 0 && !isStoryFinished) {
@@ -72,7 +66,7 @@ const StoryCreatorScreen: React.FC = () => {
     }, [handleStartNewStory, storyInProgress.length, isStoryFinished]);
 
     const handleAddSentence = async () => {
-        if (!userInput.trim() || !chatSession) return;
+        if (!userInput.trim() || !chatSession || !process.env.API_KEY) return;
         
         setIsLoading(true);
         const currentInput = userInput;
@@ -96,19 +90,19 @@ const StoryCreatorScreen: React.FC = () => {
             setStreamingText('');
         } catch(error) {
              console.error("Error continuing story:", error);
-             showToast("Buddy is having trouble thinking. Let's try that again!");
+             showToast("Buddy got lost in the story. Try that sentence again!");
         } finally {
             setIsLoading(false);
         }
     };
     
     const handleFinishStory = async () => {
-        if (!chatSession) return;
+        if (!chatSession || !process.env.API_KEY) return;
 
         setIsLoading(true);
         setStreamingText('');
         try {
-            const streamResponse = await chatSession.sendMessageStream({ message: `Let's write a great and appropriate ending for this story! Just give me one or two final sentences to wrap it up.`});
+            const streamResponse = await chatSession.sendMessageStream({ message: `Finish the story with one or two happy sentences.`});
             let fullEnding = "";
             
             for await (const chunk of streamResponse) {
@@ -127,7 +121,7 @@ const StoryCreatorScreen: React.FC = () => {
             setStreamingText('');
         } catch(error) {
             console.error("Error finishing story:", error);
-            showToast("Couldn't think of an ending!");
+            showToast("Buddy couldn't find the 'The End' sign!");
         } finally {
             setIsLoading(false);
         }
