@@ -181,16 +181,16 @@ const WelcomeScreen: React.FC = () => {
                     <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border-r-4 border-b-4 border-teal-50 rotate-45"></div>
                   </div>
 
-                  <div className="space-y-4 pt-4">
+                  <div className="space-y-4 pt-2 max-w-[280px] mx-auto w-full">
                     <input
                       type="text"
                       inputMode="numeric"
                       placeholder={t('age_selection.placeholder', 'дд.мм.гггг')}
                       value={displayDate}
                       onChange={handleInputChange}
-                      className={`w-full bg-slate-50 border-[6px] ${
+                      className={`w-full bg-slate-50 border-4 ${
                         error ? 'border-red-400' : 'border-teal-100'
-                      } rounded-[2rem] p-6 text-4xl font-black text-teal-800 focus:outline-none focus:border-teal-400 transition-all shadow-inner text-center placeholder:opacity-30`}
+                      } rounded-3xl p-4 text-2xl font-black text-teal-800 focus:outline-none focus:border-teal-400 transition-all shadow-inner text-center placeholder:opacity-30`}
                     />
                   </div>
 
