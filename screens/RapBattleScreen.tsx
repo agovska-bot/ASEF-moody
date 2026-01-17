@@ -5,6 +5,8 @@ import { useAppContext } from '../context/AppContext';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useTranslation } from '../hooks/useTranslation';
 
+declare const __API_KEY__: string;
+
 // --- Web Audio API Helpers for the Beat ---
 const createDrumMachine = (ctx: AudioContext) => {
     const playKick = (time: number) => {
@@ -132,8 +134,9 @@ const RapBattleScreen: React.FC = () => {
   const generateRap = async () => {
     if (!name.trim() || !mood.trim()) return;
     
-    // Safety check
-    if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
+    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
+    
+    if (!apiKey) {
         showToast("AI is offline. (Missing API Key)");
         return;
     }
@@ -143,7 +146,7 @@ const RapBattleScreen: React.FC = () => {
     stopPlayback();
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         let langCode = language === 'mk' ? "Macedonian" : (language === 'tr' ? "Turkish" : "English");
         
         const prompt = `You are Buddy, a cool rhythmic rapper. Write a short 4-line rap for ${name} who is feeling ${mood}. Use simple rhymes. Language: ${langCode}. Output only the lyrics.`;

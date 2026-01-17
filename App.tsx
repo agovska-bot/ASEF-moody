@@ -14,25 +14,26 @@ import RapBattleScreen from './screens/RapBattleScreen';
 import Toast from './components/Toast';
 import WelcomeScreen from './screens/LanguageSelectionScreen';
 
+// Declare the global constant for TS
+declare global {
+  const __API_KEY__: string;
+}
+
 const App: React.FC = () => {
   const { currentScreen, toastMessage, ageGroup, language, birthDate } = useAppContext();
   const [keyMissing, setKeyMissing] = useState(false);
 
   useEffect(() => {
-    // Check for a valid key. 
-    // Vite's 'define' replaces process.env.API_KEY with a string literal during build.
-    const apiKey = (process.env.API_KEY || "").trim();
+    // Check for a valid key using our global constant injection
+    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
     const isPlaceholder = apiKey === "" || apiKey === "YOUR_API_KEY" || apiKey === "undefined" || apiKey === "null";
     
     if (isPlaceholder) {
       setKeyMissing(true);
-      console.error("[Moody Buddy] CRITICAL: API_KEY is missing or invalid in the build environment.");
+      console.error("[Moody Buddy] CRITICAL: API_KEY is missing. Check Vercel environment variables.");
     } else {
       setKeyMissing(false);
-      const obscuredKey = apiKey.length > 8 
-        ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` 
-        : "***";
-      console.log(`[Moody Buddy] AI System Initialized. Key: ${obscuredKey} (Len: ${apiKey.length})`);
+      console.log(`[Moody Buddy] AI System Ready. Key length: ${apiKey.length}`);
     }
   }, []);
 
@@ -85,7 +86,7 @@ const App: React.FC = () => {
       {keyMissing && (
         <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[11px] py-1.5 px-4 z-[9999] text-center font-bold uppercase tracking-wider shadow-xl flex items-center justify-center gap-2">
           <span>⚠️ AI OFFLINE</span>
-          <span className="opacity-80 font-normal normal-case">Check Vercel Environment Variables (API_KEY)</span>
+          <span className="opacity-80 font-normal normal-case">Missing API_KEY in Vercel settings</span>
         </div>
       )}
       {renderContent()}

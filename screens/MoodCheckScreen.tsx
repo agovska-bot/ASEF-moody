@@ -9,6 +9,8 @@ import { GoogleGenAI } from "@google/genai";
 import BuddyIcon from '../components/BuddyIcon';
 import TTSButton from '../components/TTSButton';
 
+declare const __API_KEY__: string;
+
 const MoodCheckScreen: React.FC = () => {
   const { addMood, setCurrentScreen, age, ageGroup, language, showToast } = useAppContext();
   const { t } = useTranslation();
@@ -28,10 +30,9 @@ const MoodCheckScreen: React.FC = () => {
   };
 
   const generateBuddySupport = async (mood: Mood, userNote: string) => {
-    const apiKey = process.env.API_KEY || "";
+    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
     
-    if (!apiKey || apiKey === "undefined" || apiKey === "") {
-      console.error("[Buddy] API Key is missing or invalid in MoodCheckScreen context.");
+    if (!apiKey) {
       showToast("Buddy's brain is not connected. (Missing API Key)");
       return null;
     }
@@ -57,7 +58,7 @@ const MoodCheckScreen: React.FC = () => {
       
       return response.text?.trim() || null;
     } catch (error) {
-      console.error("Gemini API Error details:", error);
+      console.error("Gemini API Error:", error);
       showToast("Buddy is taking a nap. Try again in a bit!");
       return null;
     } finally {

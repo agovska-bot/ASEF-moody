@@ -6,6 +6,8 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { POINTS_PER_ACTIVITY } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 
+declare const __API_KEY__: string;
+
 const GratitudeScreen: React.FC = () => {
   const { addPoints, showToast, ageGroup, age } = useAppContext();
   const { t, language } = useTranslation();
@@ -18,8 +20,9 @@ const GratitudeScreen: React.FC = () => {
   const getNewTask = useCallback(async () => {
     setIsLoading(true);
     
-    // Safety check for API key
-    if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
+    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
+    
+    if (!apiKey) {
       const fallbackTasks = t('gratitude_screen.fallback_tasks');
       setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
       setIsLoading(false);
@@ -27,11 +30,11 @@ const GratitudeScreen: React.FC = () => {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const topics = ["a color", "a song", "a feeling", "a friend", "funny moment", "tasty food", "nature", "happy memory"];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
-      let languageInstruction = language === 'mk' ? "Одговори на македонски. БИДИ ЕКСТРЕМНО ВНИМАТЕЛЕН СО ГРАМАТИКАТА." : "Response in English.";
+      let languageInstruction = language === 'mk' ? "Одговори на македонски. БИДЕ ЕКСТРЕМНО ВНИМАТЕЛЕН СО ГРАМАТИКАТА." : "Response in English.";
       const prompt = `Generate one unique gratitude question for a ${age}-year-old about ${randomTopic}. ${languageInstruction} Max 1 sentence question.`;
       
       const response = await ai.models.generateContent({
