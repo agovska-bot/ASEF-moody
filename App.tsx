@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from './context/AppContext';
 import { Screen } from './types';
 import HomeScreen from './screens/HomeScreen';
@@ -15,6 +15,12 @@ import WelcomeScreen from './screens/LanguageSelectionScreen';
 
 const App: React.FC = () => {
   const { currentScreen, toastMessage, ageGroup, language, birthDate } = useAppContext();
+
+  useEffect(() => {
+    // Hidden debug info for the developers to check API key status in console
+    const hasKey = !!process.env.API_KEY;
+    console.log(`[Moody Buddy] System check: Language=${language}, BirthDate=${birthDate}, AI_Connected=${hasKey}`);
+  }, [language, birthDate]);
 
   const getBackgroundColor = () => {
     if (!ageGroup) return 'bg-amber-50';

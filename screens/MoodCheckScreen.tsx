@@ -28,30 +28,35 @@ const MoodCheckScreen: React.FC = () => {
   };
 
   const generateBuddySupport = async (mood: Mood, userNote: string) => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      showToast("Buddy's brain is not connected (API Key missing).");
+    // Check key existence before starting
+    if (!process.env.API_KEY) {
+      console.error("Gemini API Key is missing in process.env");
+      showToast("Buddy's brain is not connected. Check Vercel settings.");
       return null;
     }
+
     setIsGeneratingResponse(true);
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let languageInstruction = "Write in English.";
       if (language === 'mk') {
-        languageInstruction = "Одговори исклучиво на македонски јазик. БИДИ ЕКСТРЕМНО СТРОГ СО ГРАМАТИКАТА. Користи топол јазик.";
+        languageInstruction = "Одговори исклучиво на македонски јазик. БИДИ ЕКСТРЕМНО СТРОГ СО ГРАМАТИКАТА. Користи топол јазик соодветен за дете.";
       } else if (language === 'tr') {
         languageInstruction = "Write in Turkish. Use perfect grammar.";
       }
-      const prompt = `You are Buddy, a supportive friend for a ${age}-year-old. User is ${mood}. Note: "${userNote}". Warm response in max 2 sentences. ${languageInstruction}`;
+      
+      const prompt = `You are Buddy, a supportive friend for a ${age}-year-old child. User is feeling ${mood}. User note: "${userNote}". Provide a warm, empathetic response in max 2 sentences. ${languageInstruction}`;
+      
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
         config: { temperature: 0.8 }
       });
+      
       return response.text.trim();
     } catch (error) {
-      console.error("Gemini Error:", error);
-      showToast("Buddy is having a moment... try again later!");
+      console.error("Gemini API Error:", error);
+      showToast("Buddy is taking a nap. Try again in a bit!");
       return null;
     } finally {
       setIsGeneratingResponse(false);
@@ -65,7 +70,7 @@ const MoodCheckScreen: React.FC = () => {
       if (response) {
         setBuddyResponse(response);
       } else {
-        // If AI fails, still save mood but go back home
+        // Fallback: if AI fails, just go home after saving mood locally
         setCurrentScreen(Screen.Home);
       }
     }
@@ -102,7 +107,7 @@ const MoodCheckScreen: React.FC = () => {
           </div>
           <button
             onClick={() => setCurrentScreen(Screen.Home)}
-            className={`w-full max-w-sm ${groupTheme.button} text-white font-bold py-4 rounded-xl shadow-md`}
+            className={`w-full max-w-sm ${groupTheme.button} text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-95`}
           >
             {t('mood_check_screen.continue')}
           </button>
