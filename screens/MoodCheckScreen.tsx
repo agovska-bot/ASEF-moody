@@ -28,17 +28,17 @@ const MoodCheckScreen: React.FC = () => {
   };
 
   const generateBuddySupport = async (mood: Mood, userNote: string) => {
-    // Check if the key is effectively missing before attempting the call.
-    if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
-      console.error("Gemini API Key is missing in process.env.API_KEY");
+    const apiKey = process.env.API_KEY || "";
+    
+    if (!apiKey || apiKey === "undefined" || apiKey === "") {
+      console.error("[Buddy] API Key is missing or invalid in MoodCheckScreen context.");
       showToast("Buddy's brain is not connected. (Missing API Key)");
       return null;
     }
 
     setIsGeneratingResponse(true);
     try {
-      // Initialize directly with the environment variable as per SDK requirements.
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       
       let languageInstruction = "Write in English.";
       if (language === 'mk') {
@@ -57,7 +57,7 @@ const MoodCheckScreen: React.FC = () => {
       
       return response.text?.trim() || null;
     } catch (error) {
-      console.error("Gemini API Error:", error);
+      console.error("Gemini API Error details:", error);
       showToast("Buddy is taking a nap. Try again in a bit!");
       return null;
     } finally {

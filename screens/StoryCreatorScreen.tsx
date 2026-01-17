@@ -23,9 +23,11 @@ const StoryCreatorScreen: React.FC = () => {
     const screenTitle = t(`home.age_${currentAgeKey}.story_creator_title`);
 
     const handleStartNewStory = useCallback(async () => {
-        const apiKey = process.env.API_KEY;
-        if (!apiKey || apiKey === "" || apiKey === "undefined") {
-            showToast("Buddy's imagination is offline (Missing API Key). Check Vercel settings.");
+        const apiKey = process.env.API_KEY || "";
+        
+        if (!apiKey || apiKey === "undefined" || apiKey === "") {
+            console.error("[Buddy] API Key missing in StoryCreatorScreen.");
+            showToast("Buddy's imagination is offline (Missing API Key).");
             setIsLoading(false);
             return;
         }
@@ -35,7 +37,7 @@ const StoryCreatorScreen: React.FC = () => {
         setStreamingText('');
         
         try {
-            const ai = new GoogleGenAI({ apiKey: apiKey });
+            const ai = new GoogleGenAI({ apiKey });
             
             let languageInstruction = "Use simple, clear English.";
             if (language === 'mk') languageInstruction = "Одговори на македонски јазик. Користи јасен и едноставен јазик соодветен за дете.";
@@ -63,7 +65,6 @@ const StoryCreatorScreen: React.FC = () => {
     }, [age, language, startNewStory, showToast]);
 
     useEffect(() => {
-        // Only start if there is no story in progress and we haven't already tried to initialize in this session
         if (storyInProgress.length === 0 && !isStoryFinished && !initRef.current) {
             initRef.current = true;
             handleStartNewStory();
@@ -71,7 +72,7 @@ const StoryCreatorScreen: React.FC = () => {
     }, [handleStartNewStory, storyInProgress.length, isStoryFinished]);
 
     const handleAddSentence = async () => {
-        const apiKey = process.env.API_KEY;
+        const apiKey = process.env.API_KEY || "";
         if (!userInput.trim() || !chatSession || !apiKey) return;
         
         setIsLoading(true);
@@ -103,7 +104,7 @@ const StoryCreatorScreen: React.FC = () => {
     };
     
     const handleFinishStory = async () => {
-        const apiKey = process.env.API_KEY;
+        const apiKey = process.env.API_KEY || "";
         if (!chatSession || !apiKey) return;
 
         setIsLoading(true);
