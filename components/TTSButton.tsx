@@ -1,6 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { useAppContext } from '../context/AppContext';
+
+declare const __API_KEY__: string;
 
 // Helper functions for audio decoding
 function decode(base64: string): Uint8Array {
@@ -64,8 +67,7 @@ const TTSButton: React.FC<TTSButtonProps> = ({ textToSpeak, className }) => {
       return;
     }
     
-    // FIX: Use process.env.API_KEY as per the guidelines.
-    const apiKey = process.env.API_KEY;
+    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
     if (!apiKey) {
       console.error("API_KEY is missing. TTS is disabled.");
       showToast("Sorry, Buddy can't speak right now.");
@@ -154,8 +156,8 @@ const TTSButton: React.FC<TTSButtonProps> = ({ textToSpeak, className }) => {
     );
   };
   
-  // FIX: Use process.env.API_KEY as per the guidelines.
-  const isApiKeyMissing = !process.env.API_KEY;
+  const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
+  const isApiKeyMissing = !apiKey;
   const defaultClassName = "bg-teal-100 text-teal-600 rounded-full h-8 w-8 flex items-center justify-center transition-transform transform hover:scale-110 disabled:bg-gray-200 disabled:scale-100 disabled:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-300";
   
   return (

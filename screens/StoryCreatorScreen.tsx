@@ -6,6 +6,8 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { POINTS_PER_ACTIVITY } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 
+declare const __API_KEY__: string;
+
 const StoryCreatorScreen: React.FC = () => {
     const { 
       addPoints, showToast, ageGroup, age,
@@ -23,9 +25,9 @@ const StoryCreatorScreen: React.FC = () => {
     const screenTitle = t(`home.age_${currentAgeKey}.story_creator_title`);
 
     const handleStartNewStory = useCallback(async () => {
-        const apiKey = process.env.API_KEY || "";
+        const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
         
-        if (!apiKey || apiKey === "undefined" || apiKey === "") {
+        if (!apiKey) {
             console.error("[Buddy] API Key missing in StoryCreatorScreen.");
             showToast("Buddy's imagination is offline (Missing API Key).");
             setIsLoading(false);
@@ -54,7 +56,7 @@ const StoryCreatorScreen: React.FC = () => {
             });
             
             const response = await newChat.sendMessage({ message: `Start a new story for a ${age}-year-old. Give me just one exciting first sentence to start our adventure.` });
-            const firstSentence = response.text.trim();
+            const firstSentence = response.text?.trim() || "Once upon a time...";
             startNewStory(newChat, firstSentence);
         } catch (error) {
             console.error("Error starting story:", error);
@@ -72,7 +74,7 @@ const StoryCreatorScreen: React.FC = () => {
     }, [handleStartNewStory, storyInProgress.length, isStoryFinished]);
 
     const handleAddSentence = async () => {
-        const apiKey = process.env.API_KEY || "";
+        const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
         if (!userInput.trim() || !chatSession || !apiKey) return;
         
         setIsLoading(true);
@@ -104,7 +106,7 @@ const StoryCreatorScreen: React.FC = () => {
     };
     
     const handleFinishStory = async () => {
-        const apiKey = process.env.API_KEY || "";
+        const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
         if (!chatSession || !apiKey) return;
 
         setIsLoading(true);

@@ -6,6 +6,8 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { AgeGroup } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 
+declare const __API_KEY__: string;
+
 const BreathingExercise: React.FC<{ onFinish: () => void; ageGroup: AgeGroup | null }> = ({ onFinish, ageGroup }) => {
     const [phase, setPhase] = useState(-1); // -1: Ready, 0: In, 1: Hold, 2: Out, 3: Hold
     const [cycle, setCycle] = useState(0);
@@ -93,7 +95,7 @@ const CalmZoneScreen: React.FC = () => {
 
   const getNewTask = useCallback(async () => {
     setIsLoading(true);
-    const apiKey = process.env.API_KEY;
+    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
     if (!apiKey) {
         const fallbackTasks = t('calm_zone_screen.fallback_tasks');
         setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
@@ -126,13 +128,13 @@ const CalmZoneScreen: React.FC = () => {
         const prompt = `Short mental calming exercise for someone aged ${ageGroup} about ${randomTheme}. ${languageInstruction} Max 1 sentence direct instruction. No lists.`;
         
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: prompt,
             config: {
                 temperature: 1.1,
             }
         });
-        setTask(response.text.trim());
+        setTask(response.text?.trim() || "Take a deep breath.");
     } catch (error) {
         console.error("Error fetching calm task:", error);
         const fallbackTasks = t('calm_zone_screen.fallback_tasks');

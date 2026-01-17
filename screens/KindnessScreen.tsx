@@ -6,6 +6,8 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { POINTS_PER_ACTIVITY } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 
+declare const __API_KEY__: string;
+
 const KindnessScreen: React.FC = () => {
   const { addPoints, showToast, ageGroup } = useAppContext();
   const { t, language } = useTranslation();
@@ -17,7 +19,7 @@ const KindnessScreen: React.FC = () => {
 
   const getNewTask = useCallback(async () => {
       setIsLoading(true);
-      const apiKey = process.env.API_KEY;
+      const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
       if (!apiKey) {
         const fallbackTasks = t('kindness_screen.fallback_tasks');
         setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
@@ -49,7 +51,7 @@ const KindnessScreen: React.FC = () => {
           contents: prompt,
           config: { temperature: 0.9 }
         });
-        setTask(response.text.trim());
+        setTask(response.text?.trim() || "Do something kind today.");
       } catch (error) {
         const fallbackTasks = t('kindness_screen.fallback_tasks');
         setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);

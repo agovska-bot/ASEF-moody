@@ -6,6 +6,8 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { POINTS_PER_ACTIVITY } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 
+declare const __API_KEY__: string;
+
 const MoveScreen: React.FC = () => {
   const { addPoints, showToast, ageGroup } = useAppContext();
   const { t, language } = useTranslation();
@@ -18,14 +20,16 @@ const MoveScreen: React.FC = () => {
   const getNewTask = useCallback(async () => {
       setIsLoading(true);
       
-      if (!process.env.API_KEY || process.env.API_KEY === "" || process.env.API_KEY === "undefined") {
+      const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
+      
+      if (!apiKey) {
         setTask(t('move_screen.fallback_tasks')[0]);
         setIsLoading(false);
         return;
       }
 
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const themes = ["animal", "superhero", "robot", "slow motion", "balance", "sports", "silly walk", "stretch", "jumping"];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
