@@ -19,14 +19,17 @@ const App: React.FC = () => {
   const [keyMissing, setKeyMissing] = useState(false);
 
   useEffect(() => {
-    // Logic to detect if the key was actually injected as a non-empty string
-    const apiKey = process.env.API_KEY;
-    if (!apiKey || apiKey === "" || apiKey === "undefined") {
+    const apiKey = (process.env.API_KEY || "").trim();
+    const isPlaceholder = apiKey === "YOUR_API_KEY" || apiKey === "undefined" || apiKey === "null";
+    
+    if (!apiKey || apiKey === "" || isPlaceholder) {
       setKeyMissing(true);
-      console.error("[Moody Buddy] CRITICAL: API_KEY is missing from build!");
+      console.error("[Moody Buddy] CRITICAL: Valid API_KEY is missing from build!");
     } else {
       setKeyMissing(false);
-      console.log(`[Moody Buddy] AI Connected (Key length: ${apiKey.length})`);
+      // Log sanitized info for debugging
+      const obscuredKey = `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 2)}`;
+      console.log(`[Moody Buddy] AI Connected (Format: ${obscuredKey}, Length: ${apiKey.length})`);
     }
   }, []);
 
@@ -40,7 +43,6 @@ const App: React.FC = () => {
     }
   }
 
-  // Unified Onboarding check
   if (!language || !birthDate) {
     return (
       <div className="bg-amber-50 min-h-screen font-sans">
@@ -79,7 +81,7 @@ const App: React.FC = () => {
     <div className={`${getBackgroundColor()} min-h-screen font-sans relative`}>
       {keyMissing && (
         <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[10px] py-1 px-2 z-[9999] text-center font-bold uppercase tracking-widest shadow-lg">
-          ⚠️ AI Offline: API_KEY not detected in Vercel settings
+          ⚠️ AI Offline: Invalid API_KEY (Check Vercel Environment Variables)
         </div>
       )}
       {renderContent()}

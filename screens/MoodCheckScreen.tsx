@@ -28,16 +28,18 @@ const MoodCheckScreen: React.FC = () => {
   };
 
   const generateBuddySupport = async (mood: Mood, userNote: string) => {
-    // Check key existence before starting
-    if (!process.env.API_KEY) {
-      console.error("Gemini API Key is missing in process.env");
-      showToast("Buddy's brain is not connected. Check Vercel settings.");
+    const rawKey = process.env.API_KEY || "";
+    const apiKey = rawKey.trim();
+
+    if (!apiKey) {
+      console.error("Gemini API Key is missing");
+      showToast("Buddy's brain is not connected.");
       return null;
     }
 
     setIsGeneratingResponse(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       let languageInstruction = "Write in English.";
       if (language === 'mk') {
         languageInstruction = "Одговори исклучиво на македонски јазик. БИДИ ЕКСТРЕМНО СТРОГ СО ГРАМАТИКАТА. Користи топол јазик соодветен за дете.";
@@ -70,7 +72,6 @@ const MoodCheckScreen: React.FC = () => {
       if (response) {
         setBuddyResponse(response);
       } else {
-        // Fallback: if AI fails, just go home after saving mood locally
         setCurrentScreen(Screen.Home);
       }
     }
