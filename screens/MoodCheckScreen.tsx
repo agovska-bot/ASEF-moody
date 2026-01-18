@@ -57,9 +57,13 @@ const MoodCheckScreen: React.FC = () => {
       });
       
       return response.text?.trim() || null;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gemini API Error:", error);
-      showToast("Buddy is taking a nap. Try again in a bit!");
+      if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
+        showToast(language === 'mk' ? "Бади има премногу мисли одеднаш! Пробај пак за момент. 💤" : "Buddy has too many thoughts at once! Try again in a moment.");
+      } else {
+        showToast("Buddy is taking a nap. Try again in a bit!");
+      }
       return null;
     } finally {
       setIsGeneratingResponse(false);

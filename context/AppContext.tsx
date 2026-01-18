@@ -68,7 +68,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const ageGroup = useMemo((): AgeGroup | null => {
     if (age === null) return null;
-    if (age < 10) return '7-9';
+    // Shifted boundary: 9-year-olds now fall into the '10-12' group (conceptualized as 9-12)
+    if (age < 9) return '7-9';
     if (age < 13) return '10-12';
     return '12+';
   }, [age]);

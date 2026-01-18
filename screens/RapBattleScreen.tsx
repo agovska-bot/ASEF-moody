@@ -172,9 +172,13 @@ const RapBattleScreen: React.FC = () => {
         const base64Audio = audioRes.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
         if (base64Audio) setAudioData(base64Audio);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Rap Battle AI Error:", error);
-        showToast("Mic failed! Check connection.");
+        if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
+          showToast(language === 'mk' ? "Бади е малку уморен од рапување! Пробај пак за неколку секунди. 🎤" : "Buddy is a bit tired from all the rapping! Please try again in a few seconds.");
+        } else {
+          showToast(language === 'mk' ? "Микрофонот не работи! Провери ја конекцијата." : "Mic failed! Check connection.");
+        }
     } finally {
         setIsLoading(false);
     }
