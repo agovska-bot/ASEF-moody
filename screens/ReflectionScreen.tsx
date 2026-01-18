@@ -32,7 +32,7 @@ const formatTime = (dateString: string) => {
     return `${hours}:${minutes}`;
 };
 
-const MoodChart: React.FC<{ history: MoodEntry[], isOlderGroup: boolean }> = ({ history, isOlderGroup }) => {
+const MoodChart: React.FC<{ history: MoodEntry[], isAdult: boolean }> = ({ history, isAdult }) => {
     const { t } = useTranslation();
     const data = useMemo(() => {
         if (history.length === 0) return [];
@@ -57,20 +57,20 @@ const MoodChart: React.FC<{ history: MoodEntry[], isOlderGroup: boolean }> = ({ 
         return [x, y];
     };
 
-    const containerClasses = isOlderGroup 
-        ? "bg-white/80 backdrop-blur-md border border-white shadow-md mx-0 mb-6 pt-6"
+    const containerClasses = isAdult 
+        ? "bg-white border border-slate-200 shadow-sm mx-0 mb-6 pt-6 rounded-2xl"
         : "bg-white shadow-md mx-1 mb-6 transform rotate-1 pt-6 rounded-xl border border-gray-100";
     
-    const badgeClasses = isOlderGroup
-        ? "bg-teal-100 text-teal-800"
+    const badgeClasses = isAdult
+        ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
         : "bg-yellow-100 text-yellow-800 shadow-sm transform -rotate-2 border border-yellow-200";
 
     return (
-        <div className={`flex flex-col items-center justify-center py-4 rounded-xl relative ${containerClasses}`}>
-             <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-bold z-30 whitespace-nowrap rounded-full ${badgeClasses}`}>
+        <div className={`flex flex-col items-center justify-center py-4 relative ${containerClasses}`}>
+             <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-[10px] font-black uppercase tracking-widest z-30 whitespace-nowrap rounded-full ${badgeClasses}`}>
                 {t('reflections_screen.mood_chart_title')}
             </div>
-            <div className="flex flex-row items-center justify-center gap-4 p-2 w-full">
+            <div className="flex flex-row items-center justify-center gap-6 p-2 w-full">
                 <div className="relative w-24 h-24 flex-shrink-0">
                     <svg viewBox="-1 -1 2 2" className="transform -rotate-90 w-full h-full" style={{ overflow: 'visible' }}>
                         {data.map((slice, index) => {
@@ -81,19 +81,19 @@ const MoodChart: React.FC<{ history: MoodEntry[], isOlderGroup: boolean }> = ({ 
                             const pathData = [`M 0 0`, `L ${startX} ${startY}`, `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`, `Z`].join(' ');
                             return <path d={pathData} fill={MOOD_HEX_COLORS[slice.mood]} key={index} stroke="white" strokeWidth="0.05" />;
                         })}
-                        <circle cx="0" cy="0" r="0.6" fill={isOlderGroup ? "#f8fafc" : "white"} />
+                        <circle cx="0" cy="0" r="0.75" fill="white" />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                        <span className="text-xl font-bold text-gray-700 leading-none mb-0.5">{history.length}</span>
-                        <span className="text-[0.6rem] uppercase text-gray-500 font-bold leading-none tracking-tighter">Total</span>
+                        <span className="text-xl font-black text-slate-800 leading-none mb-0.5">{history.length}</span>
+                        <span className="text-[0.6rem] uppercase text-slate-400 font-bold leading-none tracking-tighter">Total</span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-1.5 flex-grow">
                     {data.sort((a,b) => b.count - a.count).map((slice) => (
                         <div key={slice.mood} className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: MOOD_HEX_COLORS[slice.mood] }}></div>
-                            <span className="text-xs font-bold text-gray-600 leading-tight">{t(`moods.${slice.mood}`)}</span>
-                            <span className="text-xs text-gray-400 font-mono flex-shrink-0">({slice.count})</span>
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: MOOD_HEX_COLORS[slice.mood] }}></div>
+                            <span className="text-xs font-bold text-slate-600 leading-tight">{t(`moods.${slice.mood}`)}</span>
+                            <span className="text-[10px] text-slate-400 font-mono flex-shrink-0 ml-auto">{Math.round(slice.percent * 100)}%</span>
                         </div>
                     ))}
                 </div>
@@ -109,7 +109,8 @@ const ReflectionScreen: React.FC = () => {
   const [expandedStoryDate, setExpandedStoryDate] = useState<string | null>(null);
 
   const screenTitle = t(`home.age_${ageGroup}.reflections_title`);
-  const isOlderGroup = ageGroup === '10-12';
+  const isAdult = ageGroup === '12+';
+  const isOlderTeen = ageGroup === '10-12';
 
   const prompt = useMemo(() => {
     const promptsArray = t('reflections_screen.prompts');
@@ -134,18 +135,18 @@ const ReflectionScreen: React.FC = () => {
     return [...moodHistory, ...reflections, ...stories].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [moodHistory, reflections, stories]);
 
-  const mainContainerClass = isOlderGroup 
-    ? 'bg-slate-50 rounded-xl shadow-lg border border-slate-200' 
-    : 'bg-[#fdfbf7] rounded-r-lg rounded-l-md shadow-2xl border-l-8 border-teal-800/80';
+  const mainContainerClass = isAdult 
+    ? 'bg-white rounded-3xl shadow-sm border border-slate-100 p-2' 
+    : (isOlderTeen ? 'bg-slate-50/50 rounded-2xl shadow-sm border border-slate-100' : 'bg-[#fdfbf7] rounded-r-lg rounded-l-md shadow-2xl border-l-8 border-teal-800/80');
   
   const renderEntry = (entry: MoodEntry | ReflectionEntry | StoryEntry, index: number) => {
-    const rotation = (!isOlderGroup && index % 2 === 0) ? '-rotate-1' : (!isOlderGroup ? 'rotate-1' : '');
-    const headerDateStyle = "text-[11px] text-gray-400 font-sans mb-1 font-medium";
-    const entryTitleStyle = "text-xl font-bold text-[#064e3b] leading-tight mb-1";
-    const entryBodyStyle = "text-[15px] text-slate-600 leading-relaxed italic opacity-90 whitespace-pre-wrap break-words";
+    const rotation = (!isAdult && !isOlderTeen && index % 2 === 0) ? '-rotate-1' : (!isAdult && !isOlderTeen ? 'rotate-1' : '');
+    const headerDateStyle = "text-[10px] uppercase tracking-widest text-slate-400 font-black mb-2";
+    const entryTitleStyle = isAdult ? "text-lg font-black text-slate-800 leading-tight mb-2" : (isOlderTeen ? "text-lg font-black text-slate-800 leading-tight mb-2" : "text-xl font-bold text-[#064e3b] leading-tight mb-1");
+    const entryBodyStyle = isAdult ? "text-sm text-slate-600 leading-relaxed font-medium" : "text-[15px] text-slate-600 leading-relaxed italic opacity-90 whitespace-pre-wrap break-words";
 
-    const entryContainerClass = isOlderGroup 
-        ? "mb-4 p-4 bg-white rounded-xl shadow-sm border border-slate-100"
+    const entryContainerClass = (isAdult || isOlderTeen) 
+        ? "mb-4 p-5 bg-white rounded-2xl shadow-sm border border-slate-50 transition-all hover:shadow-md"
         : `mb-6 relative pl-4 pr-4 transform ${rotation} hover:rotate-0 transition-transform`;
 
     if ('mood' in entry) {
@@ -154,8 +155,8 @@ const ReflectionScreen: React.FC = () => {
                 <p className={headerDateStyle}>
                     {formatDate(entry.date)} • {formatTime(entry.date)}
                 </p>
-                <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full text-2xl ${MOOD_COLORS[entry.mood]} shadow-md border-2 border-white`}>
+                <div className="flex items-center gap-4 mb-3">
+                    <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xl ${MOOD_COLORS[entry.mood]} shadow-sm border border-white`}>
                         {MOOD_EMOJIS[entry.mood]}
                     </div>
                     <h3 className={entryTitleStyle}>
@@ -167,31 +168,31 @@ const ReflectionScreen: React.FC = () => {
                         "{ entry.note }"
                     </p>
                 )}
-                {!isOlderGroup && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
+                {(!isAdult && !isOlderTeen) && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
             </div>
         );
     }
 
     if ('content' in entry) {
         const isExpanded = expandedStoryDate === entry.date;
-        const storyHeaderBg = isOlderGroup ? "bg-white" : "bg-purple-50/50 p-5 rounded-r-lg border-l-4 border-purple-300 shadow-sm";
+        const storyHeaderBg = (isAdult || isOlderTeen) ? "bg-white" : "bg-purple-50/50 p-5 rounded-r-lg border-l-4 border-purple-300 shadow-sm";
         return (
-             <div className={`mb-4 group cursor-pointer transition-all ${isExpanded ? 'ring-2 ring-purple-100' : ''} rounded-xl shadow-sm border border-purple-100 p-4 ${storyHeaderBg}`} onClick={() => toggleStoryExpansion(entry.date)}>
+             <div className={`mb-4 group cursor-pointer transition-all ${isExpanded ? 'ring-2 ring-indigo-50 shadow-md' : 'shadow-sm'} rounded-2xl border border-indigo-50 p-5 ${storyHeaderBg}`} onClick={() => toggleStoryExpansion(entry.date)}>
                 <p className={headerDateStyle}>{formatDate(entry.date)}</p>
                 <div className="flex items-start justify-between gap-4">
-                     <div className="flex items-center space-x-3 min-w-0">
-                        <span className="text-2xl bg-purple-100 rounded-lg p-2 flex-shrink-0">📖</span>
+                     <div className="flex items-center space-x-4 min-w-0">
+                        <span className="text-xl bg-indigo-50 text-indigo-500 rounded-xl p-2.5 flex-shrink-0">📖</span>
                         <div className="min-w-0">
                             <h3 className={entryTitleStyle}>{entry.title}</h3>
                         </div>
                     </div>
-                    <span className="text-purple-400 text-xl flex-shrink-0">{isExpanded ? '−' : '+'}</span>
+                    <span className="text-indigo-300 text-xl flex-shrink-0">{isExpanded ? '−' : '+'}</span>
                 </div>
-                {!isExpanded && <p className="text-gray-500 mt-2 text-sm truncate opacity-70 italic">"{entry.content[0]}..."</p>}
+                {!isExpanded && <p className="text-slate-400 mt-2 text-xs truncate font-medium">"{entry.content[0]}..."</p>}
                 {isExpanded && (
-                    <div className="mt-4 space-y-2 max-h-96 overflow-y-auto story-scroll pr-2">
+                    <div className="mt-4 space-y-3 max-h-96 overflow-y-auto story-scroll pr-2">
                         {entry.content.map((part, partIndex) => (
-                            <p key={partIndex} className={`text-base whitespace-pre-wrap break-words ${partIndex % 2 === 0 ? 'text-gray-700 font-medium' : 'text-purple-700 italic'}`}>
+                            <p key={partIndex} className={`text-sm whitespace-pre-wrap break-words ${partIndex % 2 === 0 ? 'text-slate-700 font-bold' : 'text-indigo-600 italic'}`}>
                                {part}
                             </p>
                         ))}
@@ -206,7 +207,7 @@ const ReflectionScreen: React.FC = () => {
             <p className={headerDateStyle}>{formatDate(entry.date)}</p>
             <h3 className={entryTitleStyle}>{entry.prompt || t('reflections_screen.reflection_title')}</h3>
             <p className={entryBodyStyle}>"{entry.text}"</p>
-            {!isOlderGroup && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
+            {(!isAdult && !isOlderTeen) && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
         </div>
     );
   }
@@ -218,19 +219,22 @@ const ReflectionScreen: React.FC = () => {
         .font-handwriting { font-family: 'Dancing Script', cursive; }
         .lined-paper { background-color: #fdfbf7; background-image: linear-gradient(#e5e5e5 1px, transparent 1px); background-size: 100% 2.5rem; }
         .notebook-holes { background-image: radial-gradient(#f3f4f6 20%, transparent 20%); background-size: 100% 40px; background-position: 10px 10px; }
-        .story-scroll { scrollbar-width: thin; scrollbar-color: #d8b4fe transparent; }
+        .story-scroll { scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; }
       `}</style>
       <div className="flex flex-col flex-grow h-full">
         <div className="mb-4"> <PointsSummary /> </div>
         <div className={`flex-grow overflow-hidden flex flex-col relative ${mainContainerClass}`}>
-            {!isOlderGroup && <div className="absolute left-0 top-0 bottom-0 w-8 z-10 notebook-holes border-r border-gray-200/50"></div>}
-            <div className={`p-6 pb-0 relative z-0 ${!isOlderGroup ? 'pl-10' : ''}`}>
-                {isOlderGroup ? (
-                     <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p className="text-sm font-semibold text-slate-500 mb-2">{prompt}</p>
-                         <textarea className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400 transition-all resize-none" rows={3} placeholder={t('reflections_screen.reflection_placeholder')} value={newReflection} onChange={(e) => setNewReflection(e.target.value)} />
-                        <div className="flex justify-end mt-2">
-                             <button onClick={handleAddReflection} disabled={!newReflection.trim()} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg text-sm shadow hover:bg-teal-700 transition-colors disabled:opacity-50">
+            {!isAdult && !isOlderTeen && <div className="absolute left-0 top-0 bottom-0 w-8 z-10 notebook-holes border-r border-gray-200/50"></div>}
+            <div className={`p-6 pb-0 relative z-0 ${(!isAdult && !isOlderTeen) ? 'pl-10' : ''}`}>
+                {isAdult || isOlderTeen ? (
+                     <div className="bg-white p-5 rounded-2xl shadow-sm border border-teal-50">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-teal-500 text-lg">💡</span>
+                            <p className="text-xs font-black uppercase tracking-widest text-slate-500">{prompt}</p>
+                        </div>
+                         <textarea className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-teal-100/50 focus:border-teal-200 transition-all resize-none font-medium placeholder:text-slate-300" rows={3} placeholder={t('reflections_screen.reflection_placeholder')} value={newReflection} onChange={(e) => setNewReflection(e.target.value)} />
+                        <div className="flex justify-end mt-3">
+                             <button onClick={handleAddReflection} disabled={!newReflection.trim()} className="bg-teal-600 text-white font-black py-2.5 px-8 rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all disabled:opacity-30 active:scale-95">
                                 {t('reflections_screen.save_reflection_button')}
                             </button>
                         </div>
@@ -250,17 +254,17 @@ const ReflectionScreen: React.FC = () => {
                     </div>
                 )}
             </div>
-            <div className={`flex-grow overflow-y-auto p-6 relative ${!isOlderGroup ? 'pl-12 lined-paper' : ''}`}>
-                <MoodChart history={moodHistory} isOlderGroup={isOlderGroup} />
-                <h2 className={`text-center text-teal-800 mb-6 ${isOlderGroup ? 'text-xl font-bold font-sans' : 'text-3xl font-handwriting underline decoration-wavy decoration-teal-300/50'}`}>
+            <div className={`flex-grow overflow-y-auto p-6 relative ${(!isAdult && !isOlderTeen) ? 'pl-12 lined-paper' : ''}`}>
+                <MoodChart history={moodHistory} isAdult={isAdult} />
+                <h2 className={`text-center text-teal-800 mb-8 ${isAdult || isOlderTeen ? 'text-xs font-black uppercase tracking-[0.3em] opacity-50' : 'text-3xl font-handwriting underline decoration-wavy decoration-teal-300/50'}`}>
                     {t('reflections_screen.journal_title')}
                 </h2>
-                <div className="space-y-2">
+                <div className="space-y-4">
                 {combinedEntries.length > 0 ? (
                     combinedEntries.map((entry, index) => <div key={entry.date}>{renderEntry(entry, index)}</div>)
                 ) : (
                     <div className="text-center py-10 opacity-50">
-                        <p className={`${isOlderGroup ? 'text-base font-sans' : 'font-handwriting text-2xl'} text-gray-500`}>{t('reflections_screen.journal_empty')}</p>
+                        <p className={`${(isAdult || isOlderTeen) ? 'text-sm font-bold uppercase tracking-widest' : 'font-handwriting text-2xl'} text-slate-400`}>{t('reflections_screen.journal_empty')}</p>
                     </div>
                 )}
                 </div>

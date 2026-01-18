@@ -3,7 +3,8 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  // Fix: Cast process to any to access cwd() when node types are not fully recognized in the config environment
+  const env = loadEnv(mode, (process as any).cwd(), '');
   
   // Sanitize the API Key from all possible sources
   let apiKey = (process.env.API_KEY || env.API_KEY || env.VITE_API_KEY || "").trim();

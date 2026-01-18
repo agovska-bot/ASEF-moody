@@ -46,6 +46,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [translationsData, setTranslationsData] = useState<Record<string, any> | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
+  // Derived state for age
   const age = useMemo(() => {
     if (!birthDate) return null;
     const today = new Date();
@@ -72,6 +73,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return '12+';
   }, [age]);
 
+  // PWA Install logic
   useEffect(() => {
     const handler = (e: any) => {
       e.preventDefault();
@@ -88,6 +90,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setDeferredPrompt(null);
   }, [deferredPrompt]);
 
+  // Load translations
   useEffect(() => {
     const fetchTranslations = async () => {
         try {
@@ -109,8 +112,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const savedLang = localStorage.getItem('language');
     const savedBirth = localStorage.getItem('birthDate');
     
-    if (!savedLang || savedLang === 'null') return Screen.LanguageSelection;
-    if (!savedBirth || savedBirth === 'null') return Screen.AgeSelection;
+    if (!savedLang || savedLang === 'null' || savedLang === 'undefined') return Screen.LanguageSelection;
+    if (!savedBirth || savedBirth === 'null' || savedBirth === 'undefined') return Screen.AgeSelection;
     return Screen.Home;
   };
   
@@ -120,9 +123,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [stories, setStories] = useLocalStorage<StoryEntry[]>('stories', []);
   const [points, setPoints] = useLocalStorage<Points>('points', { gratitude: 0, physical: 0, kindness: 0, creativity: 0 });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [streakDays, setStreakDays] = useLocalStorage<number>('streakDays', 0);
   const [storyInProgress, setStoryInProgress] = useState<string[]>([]);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
+
+  // DYNAMIC STREAK CALCULATION
+  const streakDays = useMemo(() => {
+    if (moodHistory.length === 0) return 0;
+
+    // Get unique dates from mood history, sorted descending
+    const dates = moodHistory
+      .map(entry => {
+        const d = new Date(entry.date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      })
+      .sort((a, b) => b - a);
+    
+    const uniqueDates = Array.from(new Set(dates));
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    // If the latest entry isn't today or yesterday, streak is broken
+    if (uniqueDates[0] < yesterday.getTime()) return 0;
+
+    let streak = 0;
+    let expectedDate = uniqueDates[0];
+
+    for (let i = 0; i < uniqueDates.length; i++) {
+        if (uniqueDates[i] === expectedDate) {
+            streak++;
+            const nextExpected = new Date(expectedDate);
+            nextExpected.setDate(nextExpected.getDate() - 1);
+            expectedDate = nextExpected.getTime();
+        } else {
+            break;
+        }
+    }
+    return streak;
+  }, [moodHistory]);
   
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -155,43 +196,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [setBirthDateStorage]);
 
   const addMood = useCallback((mood: MoodEntry) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const lastEntry = moodHistory.length > 0
-        ? [...moodHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-        : null;
-
     setMoodHistory(prevHistory => [...prevHistory, mood]);
-
-    if (lastEntry) {
-        const lastEntryDate = new Date(lastEntry.date);
-        lastEntryDate.setHours(0, 0, 0, 0);
-        if (lastEntryDate.getTime() === today.getTime()) {
-            showToast(`Mood saved!`);
-            return;
-        }
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-
-        if (lastEntryDate.getTime() === yesterday.getTime()) {
-            setStreakDays(prevStreak => {
-                const newStreak = prevStreak + 1;
-                showToast(`You're on a ${newStreak}-day streak! 🔥`);
-                return newStreak;
-            });
-        } else {
-            setStreakDays(1);
-            showToast(`Mood saved! New streak started! 🔥`);
-        }
-    } else {
-        setStreakDays(1);
-        showToast(`First mood saved! Streak started! 🔥`);
-    }
-  }, [moodHistory, setMoodHistory, setStreakDays, showToast]);
+    showToast(t('mood_check_screen.save_toast', 'Mood saved! ✨'));
+  }, [setMoodHistory, showToast, t]);
 
   const addReflection = useCallback((reflection: ReflectionEntry) => {
     setReflections(prev => [...prev, reflection]);
-  }, [setReflections]);
+    showToast(t('reflections_screen.save_toast', 'Journal updated! 📝'));
+  }, [setReflections, showToast, t]);
 
   const addStory = useCallback((story: StoryEntry) => {
     setStories(prev => [...prev, story]);
@@ -238,16 +250,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setReflections([]);
     setStories([]);
     setPoints({ gratitude: 0, physical: 0, kindness: 0, creativity: 0 });
-    setStreakDays(0);
     setStoryInProgress([]);
     setChatSession(null);
     setCurrentScreen(Screen.LanguageSelection);
-  }, [setLanguageStorage, setBirthDateStorage, setMoodHistory, setReflections, setStories, setPoints, setStreakDays]);
+    localStorage.clear();
+  }, [setLanguageStorage, setBirthDateStorage, setMoodHistory, setReflections, setStories, setPoints]);
 
   if (!translationsData) {
       return (
-          <div className="flex items-center justify-center min-h-screen bg-amber-50 text-teal-700 font-semibold">
-              Loading Buddy...
+          <div className="flex items-center justify-center min-h-screen bg-amber-50 text-teal-700 font-black uppercase tracking-widest text-xl">
+              Moody Buddy Loading...
           </div>
       )
   }

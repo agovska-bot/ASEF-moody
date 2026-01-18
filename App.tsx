@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAppContext } from './context/AppContext';
 import { Screen } from './types';
 import HomeScreen from './screens/HomeScreen';
@@ -14,42 +14,22 @@ import RapBattleScreen from './screens/RapBattleScreen';
 import Toast from './components/Toast';
 import WelcomeScreen from './screens/LanguageSelectionScreen';
 
-// Declare the global constant for TS
-declare global {
-  const __API_KEY__: string;
-}
-
 const App: React.FC = () => {
   const { currentScreen, toastMessage, ageGroup, language, birthDate } = useAppContext();
-  const [keyMissing, setKeyMissing] = useState(false);
-
-  useEffect(() => {
-    // Check for a valid key using our global constant injection
-    const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
-    const isPlaceholder = apiKey === "" || apiKey === "YOUR_API_KEY" || apiKey === "undefined" || apiKey === "null";
-    
-    if (isPlaceholder) {
-      setKeyMissing(true);
-      console.error("[Moody Buddy] CRITICAL: API_KEY is missing. Check Vercel environment variables.");
-    } else {
-      setKeyMissing(false);
-      console.log(`[Moody Buddy] AI System Ready. Key length: ${apiKey.length}`);
-    }
-  }, []);
 
   const getBackgroundColor = () => {
-    if (!ageGroup) return 'bg-amber-50';
+    if (!ageGroup) return 'bg-slate-50';
     switch (ageGroup) {
-      case '7-9': return 'bg-amber-50';
+      case '7-9': return 'bg-amber-50/50';
       case '10-12': return 'bg-slate-50';
-      case '12+': return 'bg-slate-100';
-      default: return 'bg-amber-50';
+      case '12+': return 'bg-slate-50'; // Changed from slate-100 to slate-50 for a brighter, professional feel
+      default: return 'bg-slate-50';
     }
   }
 
   if (!language || !birthDate) {
     return (
-      <div className="bg-amber-50 min-h-screen font-sans">
+      <div className="bg-slate-50 min-h-screen font-sans">
         <WelcomeScreen />
         {toastMessage && <Toast message={toastMessage} />}
       </div>
@@ -82,13 +62,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`${getBackgroundColor()} min-h-screen font-sans relative`}>
-      {keyMissing && (
-        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[11px] py-1.5 px-4 z-[9999] text-center font-bold uppercase tracking-wider shadow-xl flex items-center justify-center gap-2">
-          <span>⚠️ AI OFFLINE</span>
-          <span className="opacity-80 font-normal normal-case">Missing API_KEY in Vercel settings</span>
-        </div>
-      )}
+    <div className={`${getBackgroundColor()} min-h-screen font-sans relative transition-colors duration-1000`}>
       {renderContent()}
       {toastMessage && <Toast message={toastMessage} />}
     </div>
