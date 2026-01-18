@@ -32,7 +32,7 @@ const formatTime = (dateString: string) => {
     return `${hours}:${minutes}`;
 };
 
-const MoodChart: React.FC<{ history: MoodEntry[], isAdult: boolean }> = ({ history, isAdult }) => {
+const MoodChart: React.FC<{ history: MoodEntry[], isAdult: boolean, isOlderTeen: boolean }> = ({ history, isAdult, isOlderTeen }) => {
     const { t } = useTranslation();
     const data = useMemo(() => {
         if (history.length === 0) return [];
@@ -57,11 +57,11 @@ const MoodChart: React.FC<{ history: MoodEntry[], isAdult: boolean }> = ({ histo
         return [x, y];
     };
 
-    const containerClasses = isAdult 
+    const containerClasses = (isAdult || isOlderTeen)
         ? "bg-white border border-slate-200 shadow-sm mx-0 mb-6 pt-6 rounded-2xl"
         : "bg-white shadow-md mx-1 mb-6 transform rotate-1 pt-6 rounded-xl border border-gray-100";
     
-    const badgeClasses = isAdult
+    const badgeClasses = (isAdult || isOlderTeen)
         ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
         : "bg-yellow-100 text-yellow-800 shadow-sm transform -rotate-2 border border-yellow-200";
 
@@ -122,7 +122,12 @@ const ReflectionScreen: React.FC = () => {
 
   const handleAddReflection = () => {
     if (newReflection.trim()) {
-      addReflection({ prompt, text: newReflection, date: new Date().toISOString() });
+      addReflection({ 
+        prompt, 
+        text: newReflection, 
+        date: new Date().toISOString(),
+        category: 'general'
+      });
       setNewReflection('');
     }
   };
@@ -142,11 +147,13 @@ const ReflectionScreen: React.FC = () => {
   const renderEntry = (entry: MoodEntry | ReflectionEntry | StoryEntry, index: number) => {
     const rotation = (!isAdult && !isOlderTeen && index % 2 === 0) ? '-rotate-1' : (!isAdult && !isOlderTeen ? 'rotate-1' : '');
     const headerDateStyle = "text-[10px] uppercase tracking-widest text-slate-400 font-black mb-2";
-    const entryTitleStyle = isAdult ? "text-lg font-black text-slate-800 leading-tight mb-2" : (isOlderTeen ? "text-lg font-black text-slate-800 leading-tight mb-2" : "text-xl font-bold text-[#064e3b] leading-tight mb-1");
-    const entryBodyStyle = isAdult ? "text-sm text-slate-600 leading-relaxed font-medium" : "text-[15px] text-slate-600 leading-relaxed italic opacity-90 whitespace-pre-wrap break-words";
+    const entryTitleStyle = (isAdult || isOlderTeen) ? "text-lg font-black text-slate-800 leading-tight mb-2" : "text-xl font-bold text-[#064e3b] leading-tight mb-1";
+    const entryBodyStyle = (isAdult || isOlderTeen) 
+        ? "text-[15px] text-slate-600 leading-relaxed font-medium whitespace-pre-wrap break-words" 
+        : "text-[15px] text-slate-600 leading-relaxed italic opacity-90 whitespace-pre-wrap break-words";
 
     const entryContainerClass = (isAdult || isOlderTeen) 
-        ? "mb-4 p-5 bg-white rounded-2xl shadow-sm border border-slate-50 transition-all hover:shadow-md"
+        ? "mb-6 p-5 bg-white rounded-2xl shadow-sm border border-slate-50 transition-all hover:shadow-md"
         : `mb-6 relative pl-4 pr-4 transform ${rotation} hover:rotate-0 transition-transform`;
 
     if ('mood' in entry) {
@@ -155,19 +162,15 @@ const ReflectionScreen: React.FC = () => {
                 <p className={headerDateStyle}>
                     {formatDate(entry.date)} • {formatTime(entry.date)}
                 </p>
-                <div className="flex items-center gap-4 mb-3">
-                    <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl text-xl ${MOOD_COLORS[entry.mood]} shadow-sm border border-white`}>
-                        {MOOD_EMOJIS[entry.mood]}
+                <div className="flex items-start gap-4">
+                    <span className="text-xl flex-shrink-0 mt-1">{MOOD_EMOJIS[entry.mood]}</span>
+                    <div className="flex-grow min-w-0">
+                        <h3 className={entryTitleStyle}>
+                            {t('reflections_screen.feeling_mood').replace('{mood}', t(`moods.${entry.mood}`))}
+                        </h3>
+                        {entry.note && <p className={entryBodyStyle}>"{entry.note}"</p>}
                     </div>
-                    <h3 className={entryTitleStyle}>
-                        {t('reflections_screen.feeling_mood').replace('{mood}', t(`moods.${entry.mood}`))}
-                    </h3>
                 </div>
-                {entry.note && (
-                    <p className={entryBodyStyle}>
-                        "{ entry.note }"
-                    </p>
-                )}
                 {(!isAdult && !isOlderTeen) && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
             </div>
         );
@@ -175,38 +178,51 @@ const ReflectionScreen: React.FC = () => {
 
     if ('content' in entry) {
         const isExpanded = expandedStoryDate === entry.date;
-        const storyHeaderBg = (isAdult || isOlderTeen) ? "bg-white" : "bg-purple-50/50 p-5 rounded-r-lg border-l-4 border-purple-300 shadow-sm";
         return (
-             <div className={`mb-4 group cursor-pointer transition-all ${isExpanded ? 'ring-2 ring-indigo-50 shadow-md' : 'shadow-sm'} rounded-2xl border border-indigo-50 p-5 ${storyHeaderBg}`} onClick={() => toggleStoryExpansion(entry.date)}>
-                <p className={headerDateStyle}>{formatDate(entry.date)}</p>
-                <div className="flex items-start justify-between gap-4">
-                     <div className="flex items-center space-x-4 min-w-0">
-                        <span className="text-xl bg-indigo-50 text-indigo-500 rounded-xl p-2.5 flex-shrink-0">📖</span>
-                        <div className="min-w-0">
+             <div className={`${entryContainerClass} cursor-pointer`} onClick={() => toggleStoryExpansion(entry.date)}>
+                <p className={headerDateStyle}>
+                    {formatDate(entry.date)} • {formatTime(entry.date)}
+                </p>
+                <div className="flex items-start gap-4">
+                    <span className={`text-xl flex-shrink-0 mt-1 ${isAdult || isOlderTeen ? 'bg-indigo-50 text-indigo-500 rounded-lg p-1' : ''}`}>📖</span>
+                    <div className="flex-grow min-w-0">
+                        <div className="flex items-center justify-between">
                             <h3 className={entryTitleStyle}>{entry.title}</h3>
+                            <span className="text-slate-300 text-lg">{isExpanded ? '−' : '+'}</span>
                         </div>
+                        {!isExpanded && <p className={`${entryBodyStyle} truncate`}>"{entry.content[0]}..."</p>}
+                        {isExpanded && (
+                            <div className="mt-4 space-y-3 max-h-96 overflow-y-auto story-scroll pr-2">
+                                {entry.content.map((part, partIndex) => (
+                                    <p key={partIndex} className={`text-[15px] whitespace-pre-wrap break-words leading-relaxed ${partIndex % 2 === 0 ? 'text-slate-700 font-bold' : 'text-indigo-600 italic'}`}>
+                                    {part}
+                                    </p>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <span className="text-indigo-300 text-xl flex-shrink-0">{isExpanded ? '−' : '+'}</span>
                 </div>
-                {!isExpanded && <p className="text-slate-400 mt-2 text-xs truncate font-medium">"{entry.content[0]}..."</p>}
-                {isExpanded && (
-                    <div className="mt-4 space-y-3 max-h-96 overflow-y-auto story-scroll pr-2">
-                        {entry.content.map((part, partIndex) => (
-                            <p key={partIndex} className={`text-sm whitespace-pre-wrap break-words ${partIndex % 2 === 0 ? 'text-slate-700 font-bold' : 'text-indigo-600 italic'}`}>
-                               {part}
-                            </p>
-                        ))}
-                    </div>
-                )}
+                {(!isAdult && !isOlderTeen) && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
             </div>
         );
     }
 
+    // It's a ReflectionEntry
+    const isGratitude = entry.category === 'gratitude';
+    const icon = isGratitude ? "🌟" : "📝";
+
     return (
         <div className={entryContainerClass}>
-            <p className={headerDateStyle}>{formatDate(entry.date)}</p>
-            <h3 className={entryTitleStyle}>{entry.prompt || t('reflections_screen.reflection_title')}</h3>
-            <p className={entryBodyStyle}>"{entry.text}"</p>
+            <p className={headerDateStyle}>
+                {formatDate(entry.date)} • {formatTime(entry.date)}
+            </p>
+            <div className="flex items-start gap-4">
+                <span className={`text-xl flex-shrink-0 mt-1 ${isGratitude ? 'text-amber-400' : 'text-slate-300'}`}>{icon}</span>
+                <div className="flex-grow min-w-0">
+                    <h3 className={entryTitleStyle}>{entry.prompt || t('reflections_screen.reflection_title')}</h3>
+                    <p className={entryBodyStyle}>{entry.text}</p>
+                </div>
+            </div>
             {(!isAdult && !isOlderTeen) && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
         </div>
     );
@@ -255,7 +271,7 @@ const ReflectionScreen: React.FC = () => {
                 )}
             </div>
             <div className={`flex-grow overflow-y-auto p-6 relative ${(!isAdult && !isOlderTeen) ? 'pl-12 lined-paper' : ''}`}>
-                <MoodChart history={moodHistory} isAdult={isAdult} />
+                <MoodChart history={moodHistory} isAdult={isAdult} isOlderTeen={isOlderTeen} />
                 <h2 className={`text-center text-teal-800 mb-8 ${isAdult || isOlderTeen ? 'text-xs font-black uppercase tracking-[0.3em] opacity-50' : 'text-3xl font-handwriting underline decoration-wavy decoration-teal-300/50'}`}>
                     {t('reflections_screen.journal_title')}
                 </h2>

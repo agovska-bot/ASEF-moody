@@ -80,7 +80,7 @@ const MoodCheckScreen: React.FC = () => {
 
   const groupTheme = {
     '7-9': { blob1: 'bg-teal-50', blob2: 'bg-amber-50', button: 'bg-teal-600', text: 'text-teal-900' },
-    '10-12': { blob1: 'bg-slate-50', blob2: 'bg-indigo-50', button: 'bg-slate-600', text: 'text-slate-900' },
+    '10-12': { blob1: 'bg-cyan-50', blob2: 'bg-blue-50', button: 'bg-blue-500', text: 'text-blue-900' },
     '12+': { blob1: 'bg-indigo-50', blob2: 'bg-blue-50', button: 'bg-indigo-600', text: 'text-indigo-900' }
   }[ageGroup || '7-9'];
 

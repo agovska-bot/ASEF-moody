@@ -32,23 +32,23 @@ const HomeScreen: React.FC = () => {
 
   const themesMapping = {
     '12+': {
-      storyCreator: "bg-gradient-to-br from-purple-500 to-indigo-600 text-white",
-      rapBattle: "bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white",
-      gratitude: "bg-gradient-to-br from-teal-500 to-emerald-600 text-white",
-      move: "bg-gradient-to-br from-blue-500 to-indigo-700 text-white",
-      kindness: "bg-gradient-to-br from-rose-500 to-red-600 text-white",
-      calmZone: "bg-gradient-to-br from-green-500 to-teal-700 text-white",
-      moodCheck: "from-indigo-500 via-purple-600 to-pink-500",
+      storyCreator: "bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 text-white",
+      rapBattle: "bg-gradient-to-br from-rose-500 via-fuchsia-600 to-pink-700 text-white",
+      gratitude: "bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 text-white",
+      move: "bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-800 text-white",
+      kindness: "bg-gradient-to-br from-orange-500 via-rose-500 to-red-600 text-white",
+      calmZone: "bg-gradient-to-br from-teal-500 via-emerald-600 to-green-700 text-white",
+      moodCheck: "from-indigo-600 via-purple-700 to-pink-600",
       variant: 'modern' as const
     },
     '10-12': {
-      storyCreator: "bg-purple-600 text-white",
-      rapBattle: "bg-fuchsia-700 text-white",
-      gratitude: "bg-teal-600 text-white",
-      move: "bg-indigo-600 text-white",
-      kindness: "bg-rose-600 text-white",
-      calmZone: "bg-green-700 text-white",
-      moodCheck: "from-indigo-500 via-purple-600 to-pink-600",
+      storyCreator: "bg-violet-500 text-white",
+      rapBattle: "bg-pink-500 text-white",
+      gratitude: "bg-cyan-500 text-white",
+      move: "bg-blue-500 text-white",
+      kindness: "bg-rose-500 text-white",
+      calmZone: "bg-emerald-500 text-white",
+      moodCheck: "from-blue-500 via-indigo-500 to-purple-500",
       variant: 'modern' as const
     },
     '7-9': {
@@ -124,8 +124,8 @@ const HomeScreen: React.FC = () => {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-slate-50">
-      <div className={`fixed top-[-10%] left-[-20%] w-[50rem] h-[50rem] ${currentAgeKey === '12+' ? 'bg-indigo-50/50' : 'bg-yellow-100/40'} rounded-full filter blur-[100px] animate-blob z-0 pointer-events-none`}></div>
-      <div className={`fixed bottom-[-10%] right-[-20%] w-[50rem] h-[50rem] ${currentAgeKey === '12+' ? 'bg-purple-50/50' : 'bg-blue-100/40'} rounded-full filter blur-[100px] animate-blob animation-delay-4000 z-0 pointer-events-none`}></div>
+      <div className={`fixed top-[-10%] left-[-20%] w-[50rem] h-[50rem] ${currentAgeKey === '12+' ? 'bg-indigo-100/30' : 'bg-yellow-100/40'} rounded-full filter blur-[100px] animate-blob z-0 pointer-events-none`}></div>
+      <div className={`fixed bottom-[-10%] right-[-20%] w-[50rem] h-[50rem] ${currentAgeKey === '12+' ? 'bg-purple-100/30' : 'bg-blue-100/40'} rounded-full filter blur-[100px] animate-blob animation-delay-4000 z-0 pointer-events-none`}></div>
 
       <ScreenWrapper title="" showBackButton={false} footerContent={footerContent}>
         <style>{`
@@ -170,7 +170,8 @@ const HomeScreen: React.FC = () => {
                   <path d="M18.8,29.5c0,0,3,4,8,0" fill="none" stroke="#004D40" strokeWidth="3" strokeLinecap="round" />
                   <g transform="translate(42, 26) scale(0.68)">
                     <path d="M15,2v26 M2,15h26" fill="none" stroke="#004D40" strokeWidth="17" strokeLinecap="round"/>
-                    <path d="M15,2v26 M2,15h26" fill="none" stroke="#FFCB05" strokeWidth="11" strokeLinecap="round"/>
+                    <path d="M15,2v26" fill="none" stroke="#FFCB05" strokeWidth="11" strokeLinecap="round"/>
+                    <path d="M2,15h26" fill="none" stroke="#FFCB05" strokeWidth="11" strokeLinecap="round"/>
                   </g>
                 </svg>
               </div>
@@ -179,17 +180,17 @@ const HomeScreen: React.FC = () => {
                   <span className="text-[2.2rem] font-black tracking-tighter text-[#004D40]">Buddy</span>
               </div>
             </div>
-            <p className={`text-[12px] font-black uppercase tracking-[0.15em] mt-1 ${currentAgeKey === '12+' ? 'text-teal-600' : 'text-teal-800'}`}>
+            <p className={`text-[12px] font-black uppercase tracking-[0.15em] mt-1 ${currentAgeKey === '12+' ? 'text-indigo-600' : (currentAgeKey === '10-12' ? 'text-indigo-600' : 'text-teal-800')}`}>
               {t('home.subtitle')}
             </p>
         </div>
 
         <div className="space-y-6 relative z-10">
-          <section className="bg-white/60 backdrop-blur-md border-white/80 rounded-3xl p-4 border shadow-sm">
+          <section className="bg-white/70 backdrop-blur-md border-white/80 rounded-3xl p-4 border shadow-sm">
               <PointsSummary />
               <button
                   onClick={() => setCurrentScreen(Screen.MoodCheck)}
-                  className={`w-full p-6 mt-4 rounded-2xl flex items-center space-x-4 text-white bg-gradient-to-r ${theme.moodCheck} shadow-xl shadow-teal-100 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 animate-living-flame group relative overflow-hidden text-left`}
+                  className={`w-full p-6 mt-4 rounded-2xl flex items-center space-x-4 text-white bg-gradient-to-r ${theme.moodCheck} shadow-xl shadow-indigo-100 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 animate-living-flame group relative overflow-hidden text-left`}
               >
                   <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                       <span className="text-8xl">❤️‍🩹</span>
@@ -203,11 +204,11 @@ const HomeScreen: React.FC = () => {
           </section>
 
           <div className="flex items-center gap-4 px-2">
-              <div className="h-px flex-grow bg-teal-100"></div>
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] whitespace-nowrap text-teal-700">
+              <div className="h-px flex-grow bg-slate-200"></div>
+              <h2 className={`text-xs font-black uppercase tracking-[0.2em] whitespace-nowrap ${currentAgeKey === '12+' ? 'text-indigo-500' : (currentAgeKey === '10-12' ? 'text-indigo-500' : 'text-teal-700')}`}>
                   {t('home.more_activities_title', 'Авантури')}
               </h2>
-              <div className="h-px flex-grow bg-teal-100"></div>
+              <div className="h-px flex-grow bg-slate-200"></div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -279,10 +280,10 @@ const HomeScreen: React.FC = () => {
                   onClick={() => setCurrentScreen(Screen.Reflection)}
                   title={t(`${ageGroupKey}.reflections_title`)}
                   icon="📝"
-                  color="bg-white border-2 border-teal-100 text-teal-800"
+                  color={currentAgeKey === '12+' ? "bg-indigo-100 border-2 border-indigo-200 text-indigo-900" : (currentAgeKey === '10-12' ? "bg-violet-100 border-2 border-violet-200 text-violet-900" : "bg-teal-100 border-2 border-teal-200 text-teal-900")}
                   animationType={getAnim('reflection')}
                   variant={theme.variant}
-                  animationColor="text-teal-50"
+                  animationColor={currentAgeKey === '12+' ? "text-indigo-600" : (currentAgeKey === '10-12' ? "text-violet-600" : "text-teal-600")}
               />
           </div>
         </div>

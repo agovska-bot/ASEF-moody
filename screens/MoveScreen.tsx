@@ -62,7 +62,7 @@ const MoveScreen: React.FC = () => {
 
   const theme = {
     '7-9': { blob1: 'bg-lime-100', blob2: 'bg-lime-200', text: 'text-lime-800', button: 'bg-lime-500 hover:bg-lime-600', button2: 'bg-lime-100 text-lime-800' },
-    '10-12': { blob1: 'bg-indigo-100', blob2: 'bg-indigo-200', text: 'text-indigo-800', button: 'bg-indigo-500 hover:bg-indigo-600', button2: 'bg-indigo-100 text-indigo-800' },
+    '10-12': { blob1: 'bg-blue-50', blob2: 'bg-blue-100', text: 'text-blue-800', button: 'bg-blue-500 hover:bg-blue-600', button2: 'bg-blue-100 text-blue-800' },
     '12+': { blob1: 'bg-blue-100', blob2: 'bg-blue-200', text: 'text-blue-800', button: 'bg-blue-600 hover:bg-blue-700', button2: 'bg-blue-100 text-blue-800' }
   }[currentAgeKey];
 
@@ -75,7 +75,7 @@ const MoveScreen: React.FC = () => {
         <div className="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10 mx-4">
            {isLoading ? (
              <div className="flex flex-col items-center gap-2">
-                <div className="w-8 h-8 border-4 border-lime-300 border-t-lime-600 rounded-full animate-spin"></div>
+                <div className={`w-8 h-8 border-4 ${currentAgeKey === '7-9' ? 'border-lime-300 border-t-lime-600' : 'border-blue-300 border-t-blue-600'} rounded-full animate-spin`}></div>
                 <p className={`text-xl ${theme.text} animate-pulse mt-2`}>
                     {language === 'mk' ? 'Смислувам активност...' : t('move_screen.loading')}
                 </p>

@@ -142,7 +142,7 @@ const StoryCreatorScreen: React.FC = () => {
             case '7-9':
                 return { blob1: 'bg-indigo-200', blob2: 'bg-indigo-300', buddyTextBg: 'bg-indigo-100 text-indigo-800', button: 'bg-indigo-500 hover:bg-indigo-600', title: 'text-indigo-800', inputBorder: 'focus:border-indigo-400' };
             case '10-12':
-                return { blob1: 'bg-purple-200', blob2: 'bg-purple-300', buddyTextBg: 'bg-purple-100 text-purple-800', button: 'bg-purple-500 hover:bg-purple-600', title: 'text-purple-800', inputBorder: 'focus:border-purple-400' };
+                return { blob1: 'bg-violet-50', blob2: 'bg-violet-100', buddyTextBg: 'bg-violet-50 text-violet-800', button: 'bg-violet-500 hover:bg-violet-600', title: 'text-violet-800', inputBorder: 'focus:border-violet-400' };
             default:
                  return { blob1: 'bg-slate-200', blob2: 'bg-slate-300', buddyTextBg: 'bg-slate-100 text-slate-800', button: 'bg-indigo-600 hover:bg-indigo-700', title: 'text-slate-900', inputBorder: 'focus:border-indigo-500' };
         }

@@ -57,7 +57,7 @@ const BreathingExercise: React.FC<{ onFinish: () => void; ageGroup: AgeGroup | n
             case '7-9':
                 return { gradient: 'bg-gradient-to-br from-sky-300 to-cyan-400', text: 'text-sky-600' };
             case '10-12':
-                return { gradient: 'bg-gradient-to-br from-green-300 to-emerald-400', text: 'text-green-600' };
+                return { gradient: 'bg-gradient-to-br from-green-300 to-emerald-400', text: 'text-emerald-600' };
             default:
                 return { gradient: 'bg-gradient-to-br from-sky-300 to-cyan-400', text: 'text-sky-600' };
         }
@@ -157,9 +157,9 @@ const CalmZoneScreen: React.FC = () => {
             button2: 'bg-sky-100 text-sky-800',
         },
         '10-12': {
-            blob1: 'bg-green-100', blob2: 'bg-green-200', text: 'text-green-800',
-            button: 'bg-green-600 hover:bg-green-700',
-            button2: 'bg-green-100 text-green-800',
+            blob1: 'bg-emerald-50', blob2: 'bg-emerald-100', text: 'text-emerald-800',
+            button: 'bg-emerald-500 hover:bg-emerald-600',
+            button2: 'bg-emerald-100 text-emerald-800',
         },
         '12+': {
             blob1: 'bg-sky-100', blob2: 'bg-sky-200', text: 'text-sky-800',

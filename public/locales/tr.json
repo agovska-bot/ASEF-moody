@@ -40,7 +40,7 @@
       "calm_zone_title": "Derin bir nefes al",
       "calm_zone_description": "Buddy ile bir anlığına rahatla.",
       "reflections_title": "Günlüğüm",
-      "reflections_description": "Geçmiş girdilerini gör."
+      "reflections_description": "Geçміш girdilerini gör."
     },
     "age_10-12": {
       "mood_check_title": "Bugün nasılsın?",
@@ -100,6 +100,8 @@
   "gratitude_screen": {
     "loading": "Güzel bir şey düşünüyorum...",
     "complete_button": "Yaptım!",
+    "save_to_journal": "Günlüğe Kaydet",
+    "placeholder": "Cevabınızı buraya yazın...",
     "another_button": "Bana bir tane daha ver",
     "fallback_tasks": [
       "Seni güldüren bir arkadaşını ve nedenini düşün.",

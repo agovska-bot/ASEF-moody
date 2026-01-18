@@ -72,7 +72,7 @@ const KindnessScreen: React.FC = () => {
 
   const theme = {
     '7-9': { blob1: 'bg-emerald-100', blob2: 'bg-rose-100', text: 'text-emerald-800', button: 'bg-emerald-500 hover:bg-emerald-600', button2: 'bg-emerald-100 text-emerald-800' },
-    '10-12': { blob1: 'bg-rose-100', blob2: 'bg-emerald-100', text: 'text-rose-800', button: 'bg-rose-500 hover:bg-rose-600', button2: 'bg-rose-100 text-rose-800' },
+    '10-12': { blob1: 'bg-rose-50', blob2: 'bg-rose-100', text: 'text-rose-800', button: 'bg-rose-500 hover:bg-rose-600', button2: 'bg-rose-100 text-rose-800' },
     '12+': { blob1: 'bg-rose-200', blob2: 'bg-emerald-200', text: 'text-rose-900', button: 'bg-rose-600 hover:bg-rose-700', button2: 'bg-rose-100 text-rose-800' }
   }[currentAgeKey];
 

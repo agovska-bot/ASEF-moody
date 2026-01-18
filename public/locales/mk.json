@@ -80,7 +80,6 @@
     }
   },
   "mood_check_screen": {
-    "title": "Што чувствуваш?",
     "placeholder": "Што те натера да се чувствуваш вака?",
     "save_button": "Зачувај расположение",
     "buddy_support": "Бади е тука",
@@ -100,6 +99,8 @@
   "gratitude_screen": {
     "loading": "Смислувам нешто убаво...",
     "complete_button": "Го направив тоа!",
+    "save_to_journal": "Зачувај во дневник",
+    "placeholder": "Напиши го твојот одговор тука...",
     "another_button": "Дај ми друга задача",
     "fallback_tasks": [
       "Спомни си пријател што те насмеа и зошто.",

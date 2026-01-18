@@ -25,6 +25,7 @@ export interface ReflectionEntry {
     prompt: string;
     text: string;
     date: string;
+    category?: 'general' | 'gratitude';
 }
 
 export interface StoryEntry {

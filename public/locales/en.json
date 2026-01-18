@@ -99,6 +99,8 @@
   "gratitude_screen": {
     "loading": "Thinking of something nice...",
     "complete_button": "I did it!",
+    "save_to_journal": "Save to Journal",
+    "placeholder": "Write your answer here...",
     "another_button": "Give me another one",
     "fallback_tasks": [
       "Think of a friend who made you laugh and why.",

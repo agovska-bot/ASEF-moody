@@ -121,7 +121,6 @@ const Animation = ({ type }: { type: AnimationType }) => {
 
 const AnimatedTaskCard: React.FC<AnimatedTaskCardProps> = ({ title, icon, description, color, animationType, animationColor, isGrid, onClick, variant = 'playful' }) => {
   
-  // Define variant-specific styling
   const getVariantStyles = () => {
     if (variant === 'serious') {
       return "border border-white/20 shadow-xl bg-opacity-95";
@@ -159,7 +158,6 @@ const AnimatedTaskCard: React.FC<AnimatedTaskCardProps> = ({ title, icon, descri
         }
         .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
         
-        /* 7-9 specific animations */
         .running-man-svg { position: absolute; bottom: 0px; left: -100px; width: 60px; height: 60px; animation: run-across 2s linear infinite; }
         @keyframes run-across { 0% { transform: translateX(0px); } 100% { transform: translateX(550px); } }
         .runner-arm1 { animation: runner-arm-swing1 0.4s linear infinite alternate; transform-origin: 50px 40px; }
@@ -171,7 +169,6 @@ const AnimatedTaskCard: React.FC<AnimatedTaskCardProps> = ({ title, icon, descri
         @keyframes runner-leg-swing1 { from { transform: rotate(35deg); } to { transform: rotate(-45deg); } }
         @keyframes runner-leg-swing2 { from { transform: rotate(-45deg); } to { transform: rotate(35deg); } }
         
-        /* General background animations */
         .cloud { position: absolute; left: -120px; width: 60px; height: 40px; }
         .cloud-1 { top: 5px; animation: float 25s linear infinite; }
         .cloud-2 { top: 30px; transform: scale(0.6); animation: float 35s linear infinite; animation-delay: -5s; }
@@ -204,10 +201,17 @@ const AnimatedTaskCard: React.FC<AnimatedTaskCardProps> = ({ title, icon, descri
         @keyframes float-up-bubbles { to { transform: translateY(-180px); opacity: 0; } }
         
         .writing-svg { position: absolute; width: 120px; height: 40px; right: -20px; top: 50%; transform: translateY(-50%); }
-        .drawn-text { font-family: 'Dancing Script', cursive; font-size: 24px; font-weight: 700; fill: transparent; stroke: currentColor; stroke-width: 1px; stroke-dasharray: 220; stroke-dashoffset: 220; animation: draw-text 4s ease-in-out infinite; }
+        .drawn-text { font-family: 'Dancing Script', cursive; font-size: 24px; font-weight: 700; fill: transparent; stroke: currentColor; stroke-width: 2px; stroke-dasharray: 220; stroke-dashoffset: 220; animation: draw-text 4s ease-in-out infinite; }
         .pencil-icon { offset-path: url(#writing-text-path); animation: move-pencil 4s ease-in-out infinite; }
-        @keyframes draw-text { 0% { stroke-dashoffset: 220; fill: transparent; opacity: 1; } 70% { stroke-dashoffset: 0; fill: transparent; opacity: 1; } 75% { stroke-dashoffset: 0; fill: currentColor; opacity: 1; } 90% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes move-pencil { 0% { offset-distance: 0%; opacity: 1; } 70% { offset-distance: 100%; opacity: 1; } 71% { offset-distance: 100%; opacity: 1; } 90% { offset-distance: 100%; opacity: 0; } 100% { opacity: 0; } }
+        @keyframes draw-text { 
+            0% { stroke-dashoffset: 220; fill: transparent; opacity: 0; } 
+            10% { stroke-dashoffset: 220; fill: transparent; opacity: 1; }
+            70% { stroke-dashoffset: 0; fill: transparent; opacity: 1; } 
+            80% { stroke-dashoffset: 0; fill: currentColor; opacity: 1; } 
+            90% { opacity: 0; } 
+            100% { opacity: 0; } 
+        }
+        @keyframes move-pencil { 0% { offset-distance: 0%; opacity: 0; } 10% { offset-distance: 0%; opacity: 1; } 70% { offset-distance: 100%; opacity: 1; } 71% { offset-distance: 100%; opacity: 1; } 90% { offset-distance: 100%; opacity: 0; } 100% { offset-distance: 100%; opacity: 0; } }
         
         .firework { position: absolute; width: 4px; height: 4px; background: transparent; border-radius: 50%; opacity: 1; transform: scale(0); box-shadow: 0 0 0 0 currentColor, 0 0 0 0 currentColor, 0 0 0 0 currentColor, 0 0 0 0 currentColor; animation: firework-explode 1.5s ease-out infinite; }
         .fw-1 { top: 20%; left: 20%; animation-delay: 0s; }
