@@ -48,7 +48,7 @@ const HomeScreen: React.FC = () => {
       move: "bg-blue-500 text-white",
       kindness: "bg-rose-500 text-white",
       calmZone: "bg-emerald-500 text-white",
-      moodCheck: "from-blue-500 via-indigo-500 to-purple-500",
+      moodCheck: "from-emerald-400 via-teal-500 to-cyan-600",
       variant: 'modern' as const
     },
     '7-9': {
@@ -280,10 +280,10 @@ const HomeScreen: React.FC = () => {
                   onClick={() => setCurrentScreen(Screen.Reflection)}
                   title={t(`${ageGroupKey}.reflections_title`)}
                   icon="📝"
-                  color={currentAgeKey === '12+' ? "bg-indigo-100 border-2 border-indigo-200 text-indigo-900" : (currentAgeKey === '10-12' ? "bg-violet-100 border-2 border-violet-200 text-violet-900" : "bg-teal-100 border-2 border-teal-200 text-teal-900")}
+                  color={currentAgeKey === '12+' ? "bg-indigo-200 border-2 border-indigo-300 text-indigo-900" : (currentAgeKey === '10-12' ? "bg-violet-200 border-2 border-violet-300 text-violet-900" : "bg-teal-200 border-2 border-teal-300 text-teal-900")}
                   animationType={getAnim('reflection')}
                   variant={theme.variant}
-                  animationColor={currentAgeKey === '12+' ? "text-indigo-600" : (currentAgeKey === '10-12' ? "text-violet-600" : "text-teal-600")}
+                  animationColor={currentAgeKey === '12+' ? "text-indigo-700" : (currentAgeKey === '10-12' ? "text-violet-700" : "text-teal-700")}
               />
           </div>
         </div>
