@@ -116,6 +116,7 @@ const RapBattleScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioData, setAudioData] = useState<string | null>(null);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const isPlayingRef = useRef(false);
@@ -143,6 +144,7 @@ const RapBattleScreen: React.FC = () => {
 
     setIsLoading(true);
     setAudioData(null);
+    setRapLyrics('');
     stopPlayback();
 
     try {
@@ -154,38 +156,54 @@ const RapBattleScreen: React.FC = () => {
         const textRes = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: prompt,
-            config: { temperature: 1.0 }
+            config: { 
+                temperature: 1.0,
+                thinkingConfig: { thinkingBudget: 0 }
+            }
         });
 
         const lyrics = textRes.text?.trim() || "";
         setRapLyrics(lyrics);
+        setIsLoading(false); // Lyrics are ready, show them!
 
+        // Start generating audio in the background
+        setIsAudioLoading(true);
         const audioRes = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
             contents: [{ parts: [{ text: `Check this out! ${lyrics}` }] }],
             config: {
               responseModalities: [Modality.AUDIO],
               speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Fenrir' } } },
+              thinkingConfig: { thinkingBudget: 0 } // Fast TTS
             },
           });
 
         const base64Audio = audioRes.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (base64Audio) setAudioData(base64Audio);
-
+        if (base64Audio) {
+            setAudioData(base64Audio);
+        }
     } catch (error: any) {
         console.error("Rap Battle AI Error:", error);
-        if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
-          showToast(language === 'mk' ? "Бади е малку уморен од рапување! Пробај пак за неколку секунди. 🎤" : "Buddy is a bit tired from all the rapping! Please try again in a few seconds.");
+        if (error?.message?.includes('429')) {
+          showToast(language === 'mk' ? "Бади е малку уморен од рапување! Пробај пак за момент. 🎤" : "Buddy is a bit tired! Please try again in a few seconds.");
         } else {
           showToast(language === 'mk' ? "Микрофонот не работи! Провери ја конекцијата." : "Mic failed! Check connection.");
         }
     } finally {
         setIsLoading(false);
+        setIsAudioLoading(false);
     }
   };
 
   const playRapWithBeat = async () => {
-      if (!audioData) return;
+      if (isAudioLoading) {
+          showToast(language === 'mk' ? "Бади уште го вежба својот глас... Почекај малку! ⏳" : "Buddy is still practicing his voice... Wait a second!");
+          return;
+      }
+      if (!audioData) {
+          showToast(language === 'mk' ? "Нема песна за пуштање! Генерирај нова." : "No song to play! Generate a new one.");
+          return;
+      }
       if (isPlaying) { stopPlayback(); return; }
 
       setIsPlaying(true);
@@ -197,56 +215,85 @@ const RapBattleScreen: React.FC = () => {
       const tempo = 90;
       const secondsPerBeat = 60.0 / tempo;
 
-      const vocalBuffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
-      
-      let nextNoteTime = ctx.currentTime + 0.1;
-      let beat = 0;
+      try {
+        const vocalBuffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
+        
+        let nextNoteTime = ctx.currentTime + 0.1;
+        let beat = 0;
 
-      const scheduler = () => {
-        if (!isPlayingRef.current) return;
-        while (nextNoteTime < ctx.currentTime + 0.1) {
-            const b = beat % 16;
-            if (b % 2 === 0) drumMachine.playHiHat(nextNoteTime, b === 14);
-            if (b === 0 || b === 10) drumMachine.playKick(nextNoteTime);
-            if (b === 4 || b === 12) drumMachine.playSnare(nextNoteTime);
-            if (b === 0) drumMachine.playBass(nextNoteTime, 65.41);
-            nextNoteTime += 0.25 * secondsPerBeat;
-            beat++;
-        }
-        setTimeout(scheduler, 25);
-      };
+        const scheduler = () => {
+          if (!isPlayingRef.current) return;
+          while (nextNoteTime < ctx.currentTime + 0.1) {
+              const b = beat % 16;
+              if (b % 2 === 0) drumMachine.playHiHat(nextNoteTime, b === 14);
+              if (b === 0 || b === 10) drumMachine.playKick(nextNoteTime);
+              if (b === 4 || b === 12) drumMachine.playSnare(nextNoteTime);
+              if (b === 0) drumMachine.playBass(nextNoteTime, 65.41);
+              nextNoteTime += 0.25 * secondsPerBeat;
+              beat++;
+          }
+          setTimeout(scheduler, 25);
+        };
 
-      scheduler();
+        scheduler();
 
-      const source = ctx.createBufferSource();
-      source.buffer = vocalBuffer;
-      source.connect(ctx.destination);
-      source.start(ctx.currentTime + (secondsPerBeat * 4));
-      vocalSourceRef.current = source;
-      source.onended = () => setTimeout(stopPlayback, 2000);
+        const source = ctx.createBufferSource();
+        source.buffer = vocalBuffer;
+        source.connect(ctx.destination);
+        source.start(ctx.currentTime + (secondsPerBeat * 4));
+        vocalSourceRef.current = source;
+        source.onended = () => {
+            if (isPlayingRef.current) setTimeout(stopPlayback, 2000);
+        };
+      } catch (e) {
+        console.error("Playback error:", e);
+        stopPlayback();
+      }
   };
 
   return (
     <ScreenWrapper title={t(`home.age_${ageGroup}.rap_battle_title`)}>
       <div className="flex flex-col items-center justify-start pt-4 text-center space-y-6">
         <div className="bg-white/80 p-6 rounded-2xl shadow-lg w-full max-w-sm">
-            {!rapLyrics ? (
+            {!rapLyrics && !isLoading ? (
                 <div className="space-y-4">
                     <div className="text-6xl animate-bounce">🎤</div>
                     <input placeholder={t('rap_battle_screen.name_placeholder')} value={name} onChange={e=>setName(e.target.value)} className="w-full p-3 border-2 rounded-xl text-center" />
                     <input placeholder={t('rap_battle_screen.mood_placeholder')} value={mood} onChange={e=>setMood(e.target.value)} className="w-full p-3 border-2 rounded-xl text-center" />
                     <button onClick={generateRap} disabled={isLoading || !name || !mood} className="w-full bg-fuchsia-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2">
-                        {isLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
-                        {isLoading ? 'Dropping beats...' : t('rap_battle_screen.generate_button')}
+                        <span>{t('rap_battle_screen.generate_button')}</span>
                     </button>
                 </div>
             ) : (
                 <div className="space-y-6">
-                    <p className="text-lg italic whitespace-pre-line">{rapLyrics}</p>
-                    <button onClick={playRapWithBeat} className={`w-full py-4 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all ${isPlaying ? 'bg-red-500' : 'bg-fuchsia-600'}`}>
-                        {isPlaying ? 'Stop' : 'Play Rap Song! 🎵'}
-                    </button>
-                    <button onClick={() => setRapLyrics('')} className="text-gray-500 underline text-sm">Try Again</button>
+                    {isLoading ? (
+                         <div className="flex flex-col items-center gap-3 py-8">
+                            <div className="w-10 h-10 border-4 border-fuchsia-200 border-t-fuchsia-600 rounded-full animate-spin"></div>
+                            <p className="text-fuchsia-600 font-black animate-pulse">{t('rap_battle_screen.loading')}</p>
+                         </div>
+                    ) : (
+                        <>
+                            <p className="text-lg font-bold italic whitespace-pre-line text-slate-700">"{rapLyrics}"</p>
+                            <button 
+                                onClick={playRapWithBeat} 
+                                className={`w-full py-4 rounded-xl font-black text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 ${isPlaying ? 'bg-red-500' : 'bg-fuchsia-600'} ${isAudioLoading ? 'opacity-80' : ''}`}
+                            >
+                                {isAudioLoading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        <span>Recording...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>{isPlaying ? 'Stop' : 'Play Rap Song! 🎵'}</span>
+                                    </>
+                                )}
+                            </button>
+                            <button onClick={() => { setRapLyrics(''); stopPlayback(); }} className="text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-fuchsia-500 transition-colors">
+                                ← {language === 'mk' ? 'Пробај пак' : 'Try Again'}
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
         </div>

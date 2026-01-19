@@ -88,6 +88,7 @@ const TTSButton: React.FC<TTSButtonProps> = ({ textToSpeak, className }) => {
                 prebuiltVoiceConfig: { voiceName: 'Kore' },
               },
           },
+          thinkingConfig: { thinkingBudget: 0 } // Speed over thinking
         },
       });
 
