@@ -57,7 +57,7 @@ const RapBattleScreen: React.FC = () => {
   };
 
   const currentAgeKey = ageGroup || '7-9';
-  const cardTitle = language === 'mk' ? `Римите на ${name || 'Бади'}` : (language === 'tr' ? `${name || 'Buddy'}'nin kafiyeleri` : `${name || 'Buddy'}'s Rhyme`);
+  const cardTitle = language === 'mk' ? `РИМИТЕ НА ${name || 'БАДИ'}` : (language === 'tr' ? `${name || 'BUDDY'}'NİN KAFİYELERİ` : `${name || 'BUDDY'}'S RHYME`);
 
   return (
     <ScreenWrapper title={t(`home.age_${currentAgeKey}.rap_battle_title`)}>
@@ -67,7 +67,7 @@ const RapBattleScreen: React.FC = () => {
             <div className="bg-white/80 p-8 rounded-[2.5rem] shadow-xl w-full max-w-sm border-4 border-fuchsia-100 animate-fadeIn">
                 <div className="text-7xl mb-6 animate-bounce drop-shadow-lg">🎤</div>
                 <h2 className="text-xl font-black text-fuchsia-800 mb-6 uppercase tracking-wider">
-                    {language === 'mk' ? 'Рап Студио' : 'Rhyme Studio'}
+                    {language === 'mk' ? 'АИ Рап Студио' : 'AI Rap Studio'}
                 </h2>
                 
                 <div className="space-y-4">
