@@ -9,7 +9,7 @@ import { useTranslation } from '../hooks/useTranslation';
 declare const __API_KEY__: string;
 
 const MoveScreen: React.FC = () => {
-  const { addPoints, showToast, ageGroup } = useAppContext();
+  const { addPoints, showToast, ageGroup, activeTasks, setActiveTask } = useAppContext();
   const { t, language } = useTranslation();
   const [task, setTask] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -17,13 +17,20 @@ const MoveScreen: React.FC = () => {
   const currentAgeKey = ageGroup || '7-9';
   const screenTitle = t(`home.age_${currentAgeKey}.get_moving_title`);
 
-  const getNewTask = useCallback(async () => {
+  const getNewTask = useCallback(async (forceRefresh: boolean = false) => {
+      if (!forceRefresh && activeTasks.move) {
+        setTask(activeTasks.move);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
-      
       const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
       
       if (!apiKey) {
-        setTask(t('move_screen.fallback_tasks')[0]);
+        const fallback = t('move_screen.fallback_tasks')[0];
+        setTask(fallback);
+        setActiveTask('move', fallback);
         setIsLoading(false);
         return;
       }
@@ -44,14 +51,18 @@ const MoveScreen: React.FC = () => {
               thinkingConfig: { thinkingBudget: 0 }
           }
         });
-        setTask(response.text?.trim() || "Let's move!");
+        const generatedTask = response.text?.trim() || "Let's move!";
+        setTask(generatedTask);
+        setActiveTask('move', generatedTask);
       } catch (error) {
         console.error("Gemini Move Error:", error);
-        setTask(t('move_screen.fallback_tasks')[0]);
+        const fallback = t('move_screen.fallback_tasks')[0];
+        setTask(fallback);
+        setActiveTask('move', fallback);
       } finally {
         setIsLoading(false);
       }
-    }, [currentAgeKey, language, t]);
+    }, [currentAgeKey, language, t, activeTasks.move, setActiveTask]);
 
   useEffect(() => {
     getNewTask();
@@ -60,7 +71,8 @@ const MoveScreen: React.FC = () => {
   const handleComplete = () => {
     addPoints('physical', POINTS_PER_ACTIVITY);
     showToast(`+${POINTS_PER_ACTIVITY} points! 💪`);
-    getNewTask();
+    setActiveTask('move', null);
+    getNewTask(true);
   };
 
   const theme = {
@@ -91,7 +103,7 @@ const MoveScreen: React.FC = () => {
             <button onClick={handleComplete} disabled={isLoading} className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-lg transition disabled:bg-gray-400 shadow-md`}>
               {t('move_screen.complete_button')}
             </button>
-            <button onClick={getNewTask} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-200`}>
+            <button onClick={() => getNewTask(true)} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-200`}>
               {t('move_screen.another_button')}
             </button>
         </div>

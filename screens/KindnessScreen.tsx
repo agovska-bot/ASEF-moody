@@ -9,7 +9,7 @@ import { useTranslation } from '../hooks/useTranslation';
 declare const __API_KEY__: string;
 
 const KindnessScreen: React.FC = () => {
-  const { addPoints, showToast, ageGroup } = useAppContext();
+  const { addPoints, showToast, ageGroup, activeTasks, setActiveTask } = useAppContext();
   const { t, language } = useTranslation();
   const [task, setTask] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -17,12 +17,22 @@ const KindnessScreen: React.FC = () => {
   const currentAgeKey = ageGroup || '7-9';
   const screenTitle = t(`home.age_${currentAgeKey}.kindness_act_title`);
 
-  const getNewTask = useCallback(async () => {
+  const getNewTask = useCallback(async (forceRefresh: boolean = false) => {
+      // If we already have a task and not forcing refresh, just use it
+      if (!forceRefresh && activeTasks.kindness) {
+        setTask(activeTasks.kindness);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
+      
       if (!apiKey) {
         const fallbackTasks = t('kindness_screen.fallback_tasks');
-        setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
+        const fallback = fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)];
+        setTask(fallback);
+        setActiveTask('kindness', fallback);
         setIsLoading(false);
         return;
       }
@@ -45,14 +55,18 @@ const KindnessScreen: React.FC = () => {
               thinkingConfig: { thinkingBudget: 0 }
           }
         });
-        setTask(response.text?.trim() || "Do something kind today.");
+        const generatedTask = response.text?.trim() || "Do something kind today.";
+        setTask(generatedTask);
+        setActiveTask('kindness', generatedTask);
       } catch (error) {
         const fallbackTasks = t('kindness_screen.fallback_tasks');
-        setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
+        const fallback = fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)];
+        setTask(fallback);
+        setActiveTask('kindness', fallback);
       } finally {
         setIsLoading(false);
       }
-    }, [currentAgeKey, language, t]);
+    }, [currentAgeKey, language, t, activeTasks.kindness, setActiveTask]);
 
   useEffect(() => {
     getNewTask();
@@ -61,7 +75,8 @@ const KindnessScreen: React.FC = () => {
   const handleComplete = () => {
     addPoints('kindness', POINTS_PER_ACTIVITY);
     showToast(`+${POINTS_PER_ACTIVITY} points! 💖`);
-    getNewTask();
+    setActiveTask('kindness', null); // Clear current task so a new one can be generated
+    getNewTask(true);
   };
 
   const theme = {
@@ -85,7 +100,7 @@ const KindnessScreen: React.FC = () => {
             <button onClick={handleComplete} disabled={isLoading} className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-lg transition shadow-md disabled:bg-gray-400`}>
                 {t('kindness_screen.complete_button')}
             </button>
-            <button onClick={getNewTask} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-200`}>
+            <button onClick={() => getNewTask(true)} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-200`}>
                 {t('kindness_screen.another_button')}
             </button>
         </div>

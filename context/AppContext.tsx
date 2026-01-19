@@ -35,6 +35,8 @@ interface AppContextType {
   t: (key: string, fallback?: string) => any;
   isInstallable: boolean;
   installApp: () => void;
+  activeTasks: Record<string, string | null>;
+  setActiveTask: (category: string, task: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -45,6 +47,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const [translationsData, setTranslationsData] = useState<Record<string, any> | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // Persistence for active tasks (Kindness, Move, Gratitude)
+  const [activeTasks, setActiveTasks] = useLocalStorage<Record<string, string | null>>('activeTasks', {
+    kindness: null,
+    move: null,
+    gratitude: null
+  });
+
+  const setActiveTask = useCallback((category: string, task: string | null) => {
+    setActiveTasks(prev => ({ ...prev, [category]: task }));
+  }, [setActiveTasks]);
 
   // Derived state for age
   const age = useMemo(() => {
@@ -68,13 +81,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const ageGroup = useMemo((): AgeGroup | null => {
     if (age === null) return null;
-    // Shifted boundary: 9-year-olds now fall into the '10-12' group (conceptualized as 9-12)
     if (age < 9) return '7-9';
     if (age < 13) return '10-12';
     return '12+';
   }, [age]);
 
-  // PWA Install logic
   useEffect(() => {
     const handler = (e: any) => {
       e.preventDefault();
@@ -91,7 +102,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setDeferredPrompt(null);
   }, [deferredPrompt]);
 
-  // Load translations
   useEffect(() => {
     const fetchTranslations = async () => {
         try {
@@ -112,7 +122,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const determineInitialScreen = () => {
     const savedLang = localStorage.getItem('language');
     const savedBirth = localStorage.getItem('birthDate');
-    
     if (!savedLang || savedLang === 'null' || savedLang === 'undefined') return Screen.LanguageSelection;
     if (!savedBirth || savedBirth === 'null' || savedBirth === 'undefined') return Screen.AgeSelection;
     return Screen.Home;
@@ -127,11 +136,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [storyInProgress, setStoryInProgress] = useState<string[]>([]);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
 
-  // DYNAMIC STREAK CALCULATION
   const streakDays = useMemo(() => {
     if (moodHistory.length === 0) return 0;
-
-    // Get unique dates from mood history, sorted descending
     const dates = moodHistory
       .map(entry => {
         const d = new Date(entry.date);
@@ -139,20 +145,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return d.getTime();
       })
       .sort((a, b) => b - a);
-    
     const uniqueDates = Array.from(new Set(dates));
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-
-    // If the latest entry isn't today or yesterday, streak is broken
     if (uniqueDates[0] < yesterday.getTime()) return 0;
-
     let streak = 0;
     let expectedDate = uniqueDates[0];
-
     for (let i = 0; i < uniqueDates.length; i++) {
         if (uniqueDates[i] === expectedDate) {
             streak++;
@@ -253,9 +253,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setPoints({ gratitude: 0, physical: 0, kindness: 0, creativity: 0 });
     setStoryInProgress([]);
     setChatSession(null);
+    setActiveTasks({ kindness: null, move: null, gratitude: null });
     setCurrentScreen(Screen.LanguageSelection);
     localStorage.clear();
-  }, [setLanguageStorage, setBirthDateStorage, setMoodHistory, setReflections, setStories, setPoints]);
+  }, [setLanguageStorage, setBirthDateStorage, setMoodHistory, setReflections, setStories, setPoints, setActiveTasks]);
 
   if (!translationsData) {
       return (
@@ -297,6 +298,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       t,
       isInstallable: !!deferredPrompt,
       installApp,
+      activeTasks,
+      setActiveTask
     }}>
       {children}
     </AppContext.Provider>

@@ -9,17 +9,22 @@ import { useTranslation } from '../hooks/useTranslation';
 declare const __API_KEY__: string;
 
 const GratitudeScreen: React.FC = () => {
-  const { addPoints, addReflection, showToast, ageGroup, age } = useAppContext();
+  const { addPoints, addReflection, showToast, ageGroup, age, activeTasks, setActiveTask } = useAppContext();
   const { t, language } = useTranslation();
   const [task, setTask] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
   const currentAgeKey = ageGroup || '7-9';
-  const isJournalingGroup = true; 
   const screenTitle = t(`home.age_${currentAgeKey}.gratitude_jar_title`);
 
-  const getNewTask = useCallback(async () => {
+  const getNewTask = useCallback(async (forceRefresh: boolean = false) => {
+    if (!forceRefresh && activeTasks.gratitude) {
+      setTask(activeTasks.gratitude);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setResponse('');
     
@@ -27,7 +32,9 @@ const GratitudeScreen: React.FC = () => {
     
     if (!apiKey) {
       const fallbackTasks = t('gratitude_screen.fallback_tasks');
-      setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
+      const fallback = fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)];
+      setTask(fallback);
+      setActiveTask('gratitude', fallback);
       setIsLoading(false);
       return;
     }
@@ -48,15 +55,19 @@ const GratitudeScreen: React.FC = () => {
             thinkingConfig: { thinkingBudget: 0 }
         }
       });
-      setTask(res.text?.trim() || "Think of something nice!");
+      const generatedTask = res.text?.trim() || "Think of something nice!";
+      setTask(generatedTask);
+      setActiveTask('gratitude', generatedTask);
     } catch (error) {
       console.error("Gemini Gratitude Error:", error);
       const fallbackTasks = t('gratitude_screen.fallback_tasks');
-      setTask(fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)]);
+      const fallback = fallbackTasks[Math.floor(Math.random() * fallbackTasks.length)];
+      setTask(fallback);
+      setActiveTask('gratitude', fallback);
     } finally {
       setIsLoading(false);
     }
-  }, [age, language, t]);
+  }, [age, language, t, activeTasks.gratitude, setActiveTask]);
   
   useEffect(() => {
     getNewTask();
@@ -75,7 +86,8 @@ const GratitudeScreen: React.FC = () => {
     }
 
     showToast(`+${POINTS_PER_ACTIVITY} points! 🌟`);
-    getNewTask();
+    setActiveTask('gratitude', null);
+    getNewTask(true);
   };
   
   const theme = {
@@ -124,7 +136,7 @@ const GratitudeScreen: React.FC = () => {
               {t('gratitude_screen.save_to_journal')}
             </button>
             <button 
-                onClick={getNewTask} 
+                onClick={() => getNewTask(true)} 
                 disabled={isLoading} 
                 className={`w-full ${theme.button2} font-black py-3 px-4 rounded-2xl transition disabled:bg-gray-200 text-xs uppercase tracking-widest`}
             >
