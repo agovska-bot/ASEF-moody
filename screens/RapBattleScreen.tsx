@@ -117,6 +117,7 @@ const RapBattleScreen: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioData, setAudioData] = useState<string | null>(null);
   const [isAudioLoading, setIsAudioLoading] = useState(false);
+  const [audioError, setAudioError] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const isPlayingRef = useRef(false);
@@ -145,12 +146,13 @@ const RapBattleScreen: React.FC = () => {
     setIsLoading(true);
     setAudioData(null);
     setRapLyrics('');
+    setAudioError(false);
     stopPlayback();
 
+    const ai = new GoogleGenAI({ apiKey });
+
     try {
-        const ai = new GoogleGenAI({ apiKey });
         let langCode = language === 'mk' ? "Macedonian" : (language === 'tr' ? "Turkish" : "English");
-        
         const prompt = `You are Buddy, a cool rhythmic rapper. Write a short 4-line rap for ${name} who is feeling ${mood}. Use simple rhymes. Language: ${langCode}. Output only the lyrics.`;
 
         const textRes = await ai.models.generateContent({
@@ -164,34 +166,45 @@ const RapBattleScreen: React.FC = () => {
 
         const lyrics = textRes.text?.trim() || "";
         setRapLyrics(lyrics);
-        setIsLoading(false); // Lyrics are ready, show them!
+        setIsLoading(false); // Show lyrics immediately
 
-        // Start generating audio in the background
+        // Now attempt to generate the audio
         setIsAudioLoading(true);
-        const audioRes = await ai.models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
-            contents: [{ parts: [{ text: `Check this out! ${lyrics}` }] }],
-            config: {
-              responseModalities: [Modality.AUDIO],
-              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Fenrir' } } },
-              thinkingConfig: { thinkingBudget: 0 } // Fast TTS
-            },
-          });
+        try {
+            const audioRes = await ai.models.generateContent({
+                model: "gemini-2.5-flash-preview-tts",
+                contents: [{ parts: [{ text: `Check this out! ${lyrics}` }] }],
+                config: {
+                  responseModalities: [Modality.AUDIO],
+                  speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Fenrir' } } },
+                  thinkingConfig: { thinkingBudget: 0 }
+                },
+              });
 
-        const base64Audio = audioRes.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (base64Audio) {
-            setAudioData(base64Audio);
+            const base64Audio = audioRes.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+            if (base64Audio) {
+                setAudioData(base64Audio);
+            } else {
+                setAudioError(true);
+            }
+        } catch (ttsErr: any) {
+            console.error("TTS generation failed:", ttsErr);
+            setAudioError(true);
+            if (ttsErr?.message?.includes('429')) {
+                showToast(language === 'mk' ? "Бади е уморен од снимање. Пробај пак за малку!" : "Buddy is tired of recording. Try again soon!");
+            }
+        } finally {
+            setIsAudioLoading(false);
         }
+
     } catch (error: any) {
-        console.error("Rap Battle AI Error:", error);
-        if (error?.message?.includes('429')) {
-          showToast(language === 'mk' ? "Бади е малку уморен од рапување! Пробај пак за момент. 🎤" : "Buddy is a bit tired! Please try again in a few seconds.");
-        } else {
-          showToast(language === 'mk' ? "Микрофонот не работи! Провери ја конекцијата." : "Mic failed! Check connection.");
-        }
-    } finally {
+        console.error("Rap Battle Text Error:", error);
         setIsLoading(false);
-        setIsAudioLoading(false);
+        if (error?.message?.includes('429')) {
+          showToast(language === 'mk' ? "Бади има премногу работа! Пробај пак за 10 секунди." : "Buddy is too busy! Try again in 10 seconds.");
+        } else {
+          showToast(language === 'mk' ? "AI не одговара. Провери интернет." : "AI not responding. Check internet.");
+        }
     }
   };
 
@@ -200,10 +213,12 @@ const RapBattleScreen: React.FC = () => {
           showToast(language === 'mk' ? "Бади уште го вежба својот глас... Почекај малку! ⏳" : "Buddy is still practicing his voice... Wait a second!");
           return;
       }
-      if (!audioData) {
-          showToast(language === 'mk' ? "Нема песна за пуштање! Генерирај нова." : "No song to play! Generate a new one.");
+      
+      if (audioError || !audioData) {
+          showToast(language === 'mk' ? "Гласот не можеше да се сними. Генерирај ја песната пак." : "Voice recording failed. Generate the song again.");
           return;
       }
+
       if (isPlaying) { stopPlayback(); return; }
 
       setIsPlaying(true);
@@ -269,28 +284,37 @@ const RapBattleScreen: React.FC = () => {
                     {isLoading ? (
                          <div className="flex flex-col items-center gap-3 py-8">
                             <div className="w-10 h-10 border-4 border-fuchsia-200 border-t-fuchsia-600 rounded-full animate-spin"></div>
-                            <p className="text-fuchsia-600 font-black animate-pulse">{t('rap_battle_screen.loading')}</p>
+                            <p className="text-fuchsia-600 font-black animate-pulse">{language === 'mk' ? 'Пишувам рими...' : 'Writing rhymes...'}</p>
                          </div>
                     ) : (
                         <>
                             <p className="text-lg font-bold italic whitespace-pre-line text-slate-700">"{rapLyrics}"</p>
-                            <button 
-                                onClick={playRapWithBeat} 
-                                className={`w-full py-4 rounded-xl font-black text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 ${isPlaying ? 'bg-red-500' : 'bg-fuchsia-600'} ${isAudioLoading ? 'opacity-80' : ''}`}
-                            >
-                                {isAudioLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        <span>Recording...</span>
-                                    </>
-                                ) : (
-                                    <>
+                            
+                            <div className="space-y-3">
+                                <button 
+                                    onClick={playRapWithBeat} 
+                                    disabled={audioError}
+                                    className={`w-full py-4 rounded-xl font-black text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 ${isPlaying ? 'bg-red-500' : 'bg-fuchsia-600'} ${isAudioLoading || audioError ? 'opacity-70' : ''}`}
+                                >
+                                    {isAudioLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <span>{language === 'mk' ? 'Снимам...' : 'Recording...'}</span>
+                                        </>
+                                    ) : audioError ? (
+                                        <span>{language === 'mk' ? 'Грешка при снимање' : 'Recording Error'}</span>
+                                    ) : (
                                         <span>{isPlaying ? 'Stop' : 'Play Rap Song! 🎵'}</span>
-                                    </>
+                                    )}
+                                </button>
+                                
+                                {audioError && (
+                                    <p className="text-xs text-red-500 font-bold">{language === 'mk' ? 'Гласот не можеше да се сними. Пробај пак.' : 'Could not record voice. Try again.'}</p>
                                 )}
-                            </button>
-                            <button onClick={() => { setRapLyrics(''); stopPlayback(); }} className="text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-fuchsia-500 transition-colors">
-                                ← {language === 'mk' ? 'Пробај пак' : 'Try Again'}
+                            </div>
+
+                            <button onClick={() => { setRapLyrics(''); stopPlayback(); setAudioError(false); }} className="text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-fuchsia-500 transition-colors">
+                                ← {language === 'mk' ? 'Нова песна' : 'New Song'}
                             </button>
                         </>
                     )}
