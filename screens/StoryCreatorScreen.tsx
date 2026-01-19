@@ -28,9 +28,7 @@ const StoryCreatorScreen: React.FC = () => {
         const apiKey = typeof __API_KEY__ !== 'undefined' ? __API_KEY__ : "";
         
         if (!apiKey) {
-            console.error("[Buddy] API Key missing in StoryCreatorScreen.");
             showToast("Buddy's imagination is offline (Missing API Key).");
-            setIsLoading(false);
             return;
         }
 
@@ -42,25 +40,26 @@ const StoryCreatorScreen: React.FC = () => {
             const ai = new GoogleGenAI({ apiKey });
             
             let languageInstruction = "Use simple, clear English.";
-            if (language === 'mk') languageInstruction = "Одговори на македонски јазик. Користи јасен и едноставен јазик соодветен за дете.";
-            if (language === 'tr') languageInstruction = "Use clear, simple Turkish language.";
+            if (language === 'mk') languageInstruction = "Одговори на македонски јазик.";
+            if (language === 'tr') languageInstruction = "Use simple Turkish.";
             
-            const systemInstruction = `You are a creative co-writer for a ${age}-year-old child. Your name is Buddy. Adjust tone to match this age. Start a new story one sentence at a time. ${languageInstruction} Never break character.`;
+            const systemInstruction = `You are a creative co-writer for a ${age}-year-old child. Your name is Buddy. Start a new story one sentence at a time. ${languageInstruction} Never break character.`;
 
             const newChat = ai.chats.create({
                 model: 'gemini-3-flash-preview',
                 config: {
                     systemInstruction: systemInstruction,
                     temperature: 0.8,
+                    thinkingConfig: { thinkingBudget: 0 } // Speed over deep reasoning
                 }
             });
             
-            const response = await newChat.sendMessage({ message: `Start a new story for a ${age}-year-old. Give me just one exciting first sentence to start our adventure.` });
+            const response = await newChat.sendMessage({ message: `Start a new story. Give me just one first sentence.` });
             const firstSentence = response.text?.trim() || "Once upon a time...";
             startNewStory(newChat, firstSentence);
         } catch (error) {
             console.error("Error starting story:", error);
-            showToast("Buddy is sleepy. Let's try again in a moment.");
+            showToast("Buddy is sleepy. Let's try again!");
         } finally {
             setIsLoading(false);
         }
@@ -99,7 +98,7 @@ const StoryCreatorScreen: React.FC = () => {
             setStreamingText('');
         } catch(error) {
              console.error("Error continuing story:", error);
-             showToast("Buddy got lost in the story. Try that sentence again!");
+             showToast("Try that sentence again!");
         } finally {
             setIsLoading(false);
         }
@@ -112,7 +111,7 @@ const StoryCreatorScreen: React.FC = () => {
         setIsLoading(true);
         setStreamingText('');
         try {
-            const streamResponse = await chatSession.sendMessageStream({ message: `Finish the story with one or two happy sentences.`});
+            const streamResponse = await chatSession.sendMessageStream({ message: `Finish the story with one happy sentence.`});
             let fullEnding = "";
             
             for await (const chunk of streamResponse) {
@@ -222,7 +221,7 @@ const StoryCreatorScreen: React.FC = () => {
                             }}
                             className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-lg transition`}
                         >
-                            {t('story_creator_screen.another_story_button')}
+                            {t('story_creator_story_button')}
                         </button>
                     </div>
                 )}

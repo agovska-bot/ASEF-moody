@@ -29,27 +29,21 @@ const KindnessScreen: React.FC = () => {
       
       try {
         const ai = new GoogleGenAI({apiKey: apiKey});
-        const themes = [
-            "a family member (parent, sibling)",
-            "a friend or neighbor",
-            "helping with a small chore at home",
-            "giving a genuine compliment",
-            "being kind to the environment or nature",
-            "sharing something",
-            "being kind to yourself",
-            "saying thank you for something specific"
-        ];
+        const themes = ["a family member", "a friend", "helping at home", "giving a compliment", "sharing", "saying thank you"];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
         let languageInstruction = "English.";
-        if (language === 'mk') languageInstruction = "Македонски јазик. Внимавај на граматика.";
+        if (language === 'mk') languageInstruction = "Македонски јазик.";
         
-        const prompt = `Generate a single, short act of kindness for a child aged ${currentAgeKey} about ${randomTheme}. ${languageInstruction} Max 1 sentence direct instruction.`;
+        const prompt = `Generate a single short act of kindness for a child aged ${currentAgeKey} about ${randomTheme}. ${languageInstruction} Max 1 sentence command.`;
         
         const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
+          model: 'gemini-flash-lite-latest',
           contents: prompt,
-          config: { temperature: 0.9 }
+          config: { 
+              temperature: 0.9,
+              thinkingConfig: { thinkingBudget: 0 }
+          }
         });
         setTask(response.text?.trim() || "Do something kind today.");
       } catch (error) {

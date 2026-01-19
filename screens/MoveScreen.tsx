@@ -33,13 +33,16 @@ const MoveScreen: React.FC = () => {
         const themes = ["animal", "superhero", "robot", "slow motion", "balance", "sports", "silly walk", "stretch", "jumping"];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-        let languageInstruction = language === 'mk' ? "На македонски. Внимавај на граматика. Не ги раздвојувај зборовите (на пр. не 'из одивте' туку 'изодивте')." : (language === 'tr' ? "In Turkish. Use perfect grammar." : "In English.");
+        let languageInstruction = language === 'mk' ? "На македонски." : (language === 'tr' ? "In Turkish." : "In English.");
         const prompt = `Short fun physical task for someone who is ${currentAgeKey} year old about ${randomTheme}. ${languageInstruction} Max 1 sentence command.`;
         
         const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
+          model: 'gemini-flash-lite-latest',
           contents: prompt,
-          config: { temperature: 1.0 }
+          config: { 
+              temperature: 1.0,
+              thinkingConfig: { thinkingBudget: 0 }
+          }
         });
         setTask(response.text?.trim() || "Let's move!");
       } catch (error) {

@@ -16,7 +16,6 @@ const GratitudeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const currentAgeKey = ageGroup || '7-9';
-  // Now enabled for ALL groups as requested
   const isJournalingGroup = true; 
   const screenTitle = t(`home.age_${currentAgeKey}.gratitude_jar_title`);
 
@@ -38,13 +37,16 @@ const GratitudeScreen: React.FC = () => {
       const topics = ["a color", "a song", "a feeling", "a friend", "funny moment", "tasty food", "nature", "happy memory"];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
-      let languageInstruction = language === 'mk' ? "Одговори на македонски. БИДЕ ЕКСТРЕМНО ВНИМАТЕЛЕН СО ГРАМАТИКАТА." : "Response in English.";
-      const prompt = `Generate one unique gratitude question for a ${age}-year-old about ${randomTopic}. ${languageInstruction} Max 1 sentence question.`;
+      let languageInstruction = language === 'mk' ? "Одговори на македонски." : "Response in English.";
+      const prompt = `Generate one short unique gratitude question for a ${age}-year-old about ${randomTopic}. ${languageInstruction} Max 1 sentence.`;
       
       const res = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-flash-lite-latest',
         contents: prompt,
-        config: { temperature: 1.0 }
+        config: { 
+            temperature: 1.0,
+            thinkingConfig: { thinkingBudget: 0 }
+        }
       });
       setTask(res.text?.trim() || "Think of something nice!");
     } catch (error) {

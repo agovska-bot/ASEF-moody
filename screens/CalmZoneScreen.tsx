@@ -105,33 +105,20 @@ const CalmZoneScreen: React.FC = () => {
 
     try {
         const ai = new GoogleGenAI({apiKey: apiKey});
-        
-        const themes = [
-            "listening closely to nearby sounds",
-            "imagining a favorite color",
-            "noticing textures around you",
-            "a gentle body scan or relaxing a body part",
-            "imagining a peaceful place",
-            "sending kind thoughts",
-            "observing details",
-            "feeling light"
-        ];
+        const themes = ["listening sounds", "favorite color", "textures", "body scan", "peaceful place"];
         const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
         let languageInstruction = "English.";
-        if (language === 'mk') {
-            languageInstruction = "Македонски јазик. ВНИМАВАЈ НА ГРАМАТИКА. Никогаш не ги раздвојувај зборовите со непотребно празно место (на пр. не 'из одивте' туку 'изодивте').";
-        } else if (language === 'tr') {
-            languageInstruction = "Turkish. Perfect grammar.";
-        }
+        if (language === 'mk') languageInstruction = "Македонски јазик.";
         
-        const prompt = `Short mental calming exercise for someone aged ${ageGroup} about ${randomTheme}. ${languageInstruction} Max 1 sentence direct instruction. No lists.`;
+        const prompt = `Short mental calming exercise for someone aged ${ageGroup} about ${randomTheme}. ${languageInstruction} Max 1 sentence command.`;
         
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-flash-lite-latest',
             contents: prompt,
             config: {
                 temperature: 1.1,
+                thinkingConfig: { thinkingBudget: 0 }
             }
         });
         setTask(response.text?.trim() || "Take a deep breath.");

@@ -5,7 +5,7 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { MOOD_OPTIONS, MOOD_EMOJIS, MOOD_COLORS } from '../constants';
 import { Mood, Screen } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import BuddyIcon from '../components/BuddyIcon';
 import TTSButton from '../components/TTSButton';
 
@@ -18,6 +18,7 @@ const MoodCheckScreen: React.FC = () => {
   const [note, setNote] = useState('');
   const [buddyResponse, setBuddyResponse] = useState<string | null>(null);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [streamedText, setStreamedText] = useState('');
 
   const screenTitle = t(`home.age_${ageGroup}.mood_check_title`);
 
@@ -34,37 +35,52 @@ const MoodCheckScreen: React.FC = () => {
     
     if (!apiKey) {
       showToast("Buddy's brain is not connected. (Missing API Key)");
-      return null;
+      return;
     }
 
     setIsGeneratingResponse(true);
+    setStreamedText('');
+    setBuddyResponse(''); // Trigger the response view early
+    
     try {
       const ai = new GoogleGenAI({ apiKey });
       
       let languageInstruction = "Write in English.";
       if (language === 'mk') {
-        languageInstruction = "Одговори исклучиво на македонски јазик. БИДИ ЕКСТРЕМНО СТРОГ СО ГРАМАТИКАТА. Користи топол јазик соодветен за дете.";
+        languageInstruction = "Одговори исклучиво на македонски јазик. Користи топол јазик соодветен за дете.";
       } else if (language === 'tr') {
-        languageInstruction = "Write in Turkish. Use perfect grammar.";
+        languageInstruction = "Write in Turkish. Use warm language.";
       }
       
-      const prompt = `You are Buddy, a supportive friend for a ${age}-year-old child. User is feeling ${mood}. User note: "${userNote}". Provide a warm, empathetic response in max 2 sentences. ${languageInstruction}`;
+      const prompt = `You are Buddy, a supportive friend for a ${age}-year-old child. User is feeling ${mood}. User note: "${userNote}". Provide a warm, short empathetic response (max 2 sentences). ${languageInstruction}`;
       
-      const response = await ai.models.generateContent({
+      const responseStream = await ai.models.generateContentStream({
         model: 'gemini-3-flash-preview',
         contents: prompt,
-        config: { temperature: 0.8 }
+        config: { 
+            temperature: 0.7,
+            thinkingConfig: { thinkingBudget: 0 } // Disable thinking for speed
+        }
       });
       
-      return response.text?.trim() || null;
+      let fullText = "";
+      for await (const chunk of responseStream) {
+          const chunkResponse = chunk as GenerateContentResponse;
+          const text = chunkResponse.text;
+          if (text) {
+              fullText += text;
+              setStreamedText(fullText);
+          }
+      }
+      setBuddyResponse(fullText);
     } catch (error: any) {
       console.error("Gemini API Error:", error);
-      if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
-        showToast(language === 'mk' ? "Бади има премногу мисли одеднаш! Пробај пак за момент. 💤" : "Buddy has too many thoughts at once! Try again in a moment.");
+      if (error?.message?.includes('429')) {
+        showToast(language === 'mk' ? "Бади има премногу мисли одеднаш! Пробај пак за момент. 💤" : "Buddy has too many thoughts! Try again in a moment.");
       } else {
         showToast("Buddy is taking a nap. Try again in a bit!");
       }
-      return null;
+      setBuddyResponse(null); // Go back to input if it fails
     } finally {
       setIsGeneratingResponse(false);
     }
@@ -72,13 +88,8 @@ const MoodCheckScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (selectedMood) {
-      const response = await generateBuddySupport(selectedMood, note);
       addMood({ mood: selectedMood, note: note, date: new Date().toISOString() });
-      if (response) {
-        setBuddyResponse(response);
-      } else {
-        setCurrentScreen(Screen.Home);
-      }
+      await generateBuddySupport(selectedMood, note);
     }
   };
 
@@ -91,12 +102,12 @@ const MoodCheckScreen: React.FC = () => {
   const activeBlob1 = selectedMood ? moodThemeColors[selectedMood].blob1 : groupTheme.blob1;
   const activeBlob2 = selectedMood ? moodThemeColors[selectedMood].blob2 : groupTheme.blob2;
 
-  if (buddyResponse) {
+  if (buddyResponse !== null) {
     return (
       <ScreenWrapper title={t('mood_check_screen.buddy_support')}>
         <div className="flex flex-col items-center justify-center space-y-8 py-8 flex-grow">
           <div className="relative">
-             <BuddyIcon className="w-32 h-32 animate-bounce" />
+             <BuddyIcon className={`w-32 h-32 ${isGeneratingResponse ? 'animate-pulse' : 'animate-bounce'}`} />
              <div className="absolute -top-4 -right-4">
                 <div className="bg-white rounded-full p-2 shadow-sm border border-gray-100">
                     <span className="text-3xl">{MOOD_EMOJIS[selectedMood!]}</span>
@@ -104,16 +115,19 @@ const MoodCheckScreen: React.FC = () => {
              </div>
           </div>
           <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-inner border border-gray-50 w-full max-w-sm">
-             <p className="text-xl text-teal-900 font-medium italic text-center leading-relaxed">
-                "{buddyResponse}"
+             <p className="text-xl text-teal-900 font-medium italic text-center leading-relaxed min-h-[3rem]">
+                {streamedText || "..."}
              </p>
-             <div className="flex justify-center mt-6">
-                <TTSButton textToSpeak={buddyResponse} className="bg-teal-500 text-white w-12 h-12 shadow-sm" />
-             </div>
+             {!isGeneratingResponse && streamedText && (
+                 <div className="flex justify-center mt-6">
+                    <TTSButton textToSpeak={streamedText} className="bg-teal-500 text-white w-12 h-12 shadow-sm" />
+                 </div>
+             )}
           </div>
           <button
             onClick={() => setCurrentScreen(Screen.Home)}
-            className={`w-full max-w-sm ${groupTheme.button} text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-95`}
+            disabled={isGeneratingResponse}
+            className={`w-full max-w-sm ${groupTheme.button} text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50`}
           >
             {t('mood_check_screen.continue')}
           </button>
