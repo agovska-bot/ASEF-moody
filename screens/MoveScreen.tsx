@@ -71,8 +71,8 @@ const MoveScreen: React.FC = () => {
   const handleComplete = () => {
     addPoints('physical', POINTS_PER_ACTIVITY);
     showToast(`+${POINTS_PER_ACTIVITY} points! 💪`);
+    // Clear and let the effect handle the next fetch naturally
     setActiveTask('move', null);
-    getNewTask(true);
   };
 
   const theme = {

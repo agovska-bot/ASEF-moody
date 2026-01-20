@@ -75,8 +75,8 @@ const KindnessScreen: React.FC = () => {
   const handleComplete = () => {
     addPoints('kindness', POINTS_PER_ACTIVITY);
     showToast(`+${POINTS_PER_ACTIVITY} points! 💖`);
-    setActiveTask('kindness', null); // Clear current task so a new one can be generated
-    getNewTask(true);
+    // Setting to null will trigger the useEffect to call getNewTask() via its dependency chain
+    setActiveTask('kindness', null);
   };
 
   const theme = {

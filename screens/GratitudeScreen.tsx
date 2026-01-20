@@ -12,7 +12,7 @@ const GratitudeScreen: React.FC = () => {
   const { addPoints, addReflection, showToast, ageGroup, age, activeTasks, setActiveTask } = useAppContext();
   const { t, language } = useTranslation();
   const [task, setTask] = useState<string>('');
-  const [response, setResponse] = useState<string>('');
+  const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   const currentAgeKey = ageGroup || '7-9';
@@ -86,8 +86,8 @@ const GratitudeScreen: React.FC = () => {
     }
 
     showToast(`+${POINTS_PER_ACTIVITY} points! 🌟`);
+    // Clear the active task; useEffect will handle fetching a new one
     setActiveTask('gratitude', null);
-    getNewTask(true);
   };
   
   const theme = {
