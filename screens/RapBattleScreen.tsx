@@ -125,7 +125,7 @@ const RapBattleScreen: React.FC = () => {
                                 </p>
                                 
                                 <div className="mt-8 opacity-40">
-                                    <span className="text-2xl">🔥🤘🔥</span>
+                                    <span className="text-2xl">🔥🎵🔥</span>
                                 </div>
                             </div>
                         </div>
