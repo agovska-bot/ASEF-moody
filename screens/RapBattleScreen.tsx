@@ -4,7 +4,6 @@ import { GoogleGenAI } from "@google/genai";
 import { useAppContext } from '../context/AppContext';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useTranslation } from '../hooks/useTranslation';
-import TTSButton from '../components/TTSButton';
 
 declare const __API_KEY__: string;
 
@@ -113,20 +112,20 @@ const RapBattleScreen: React.FC = () => {
                             {/* Neon Glow Background */}
                             <div className="absolute -inset-1 bg-gradient-to-r from-fuchsia-600 to-purple-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             
-                            <div className="relative bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl border border-white/10 text-center min-h-[300px] flex flex-col items-center justify-center">
+                            <div className="relative bg-slate-900 text-white p-10 rounded-[2.5rem] shadow-2xl border border-white/10 text-center min-h-[300px] flex flex-col items-center justify-center">
                                 <div className="absolute top-4 right-6 opacity-20 text-4xl">🎵</div>
                                 <div className="absolute bottom-4 left-6 opacity-20 text-4xl rotate-12">✨</div>
                                 
-                                <h3 className="text-fuchsia-400 font-black text-xs uppercase tracking-[0.3em] mb-6">
+                                <h3 className="text-fuchsia-400 font-black text-xs uppercase tracking-[0.3em] mb-8">
                                     {cardTitle}
                                 </h3>
                                 
-                                <p className="text-2xl font-black italic whitespace-pre-line leading-snug tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                                <p className="text-3xl font-black italic whitespace-pre-line leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,0,255,0.3)]">
                                     {rapLyrics}
                                 </p>
                                 
-                                <div className="mt-8 flex items-center justify-center gap-4">
-                                    <TTSButton textToSpeak={rapLyrics} className="bg-fuchsia-500 text-white w-14 h-14 shadow-lg shadow-fuchsia-900/40 hover:scale-110 active:scale-95 transition-transform" />
+                                <div className="mt-8 opacity-40">
+                                    <span className="text-2xl">🔥🤘🔥</span>
                                 </div>
                             </div>
                         </div>
