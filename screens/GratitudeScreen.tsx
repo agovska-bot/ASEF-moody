@@ -48,7 +48,7 @@ const GratitudeScreen: React.FC = () => {
       const prompt = `Generate one short unique gratitude question for a ${age}-year-old about ${randomTopic}. ${languageInstruction} Max 1 sentence.`;
       
       const res = await ai.models.generateContent({
-        model: 'gemini-flash-lite-latest',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: { 
             temperature: 1.0,
@@ -86,39 +86,51 @@ const GratitudeScreen: React.FC = () => {
     }
 
     showToast(`+${POINTS_PER_ACTIVITY} points! 🌟`);
-    // Clear the active task; useEffect will handle fetching a new one
     setActiveTask('gratitude', null);
   };
   
   const theme = {
-    '7-9': { blob1: 'bg-amber-100', blob2: 'bg-amber-200', text: 'text-amber-900', button: 'bg-amber-500 hover:bg-amber-600', button2: 'bg-amber-100 text-amber-800', inputBg: 'bg-amber-50/80', inputBorder: 'border-amber-100 focus:border-amber-400' },
-    '10-12': { blob1: 'bg-cyan-50', blob2: 'bg-cyan-100', text: 'text-cyan-900', button: 'bg-cyan-500 hover:bg-cyan-600', button2: 'bg-cyan-100 text-cyan-800', inputBg: 'bg-white/80', inputBorder: 'border-cyan-50 focus:border-cyan-400' },
-    '12+': { blob1: 'bg-indigo-100', blob2: 'bg-indigo-200', text: 'text-indigo-900', button: 'bg-indigo-600 hover:bg-indigo-700', button2: 'bg-indigo-100 text-indigo-800', inputBg: 'bg-white/80', inputBorder: 'border-indigo-50 focus:border-indigo-400' }
+    '7-9': { blob1: 'bg-amber-200', blob2: 'bg-amber-300', text: 'text-amber-900', button: 'bg-amber-500 hover:bg-amber-600', button2: 'bg-amber-100/50 text-amber-800', inputBg: 'bg-white/80', inputBorder: 'border-white focus:border-amber-400' },
+    '10-12': { blob1: 'bg-cyan-100', blob2: 'bg-cyan-200', text: 'text-cyan-900', button: 'bg-cyan-500 hover:bg-cyan-600', button2: 'bg-cyan-100/50 text-cyan-800', inputBg: 'bg-white/80', inputBorder: 'border-white focus:border-cyan-400' },
+    '12+': { blob1: 'bg-indigo-200', blob2: 'bg-indigo-300', text: 'text-indigo-900', button: 'bg-indigo-600 hover:bg-indigo-700', button2: 'bg-indigo-100/50 text-indigo-800', inputBg: 'bg-white/80', inputBorder: 'border-white focus:border-indigo-400' }
   }[currentAgeKey];
 
   return (
     <ScreenWrapper title={screenTitle}>
-      <div className="relative flex flex-col items-center justify-start pt-8 text-center space-y-8 flex-grow overflow-hidden px-2">
-        <div className={`absolute top-20 -left-16 w-72 h-72 ${theme.blob1} rounded-full opacity-50 filter blur-xl animate-blob`}></div>
-        <div className={`absolute top-40 -right-16 w-72 h-72 ${theme.blob2} rounded-full opacity-50 filter blur-xl animate-blob animation-delay-2000`}></div>
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(50px, -80px) scale(1.2); }
+          66% { transform: translate(-40px, 40px) scale(0.8); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 15s infinite alternate ease-in-out; }
+        .animation-delay-2000 { animation-delay: 2s; }
+      `}</style>
+
+      {/* BACKGROUND BLOBS - Now freely floating in the whole viewport */}
+      <div className={`fixed top-[-10%] left-[-15%] w-[30rem] h-[30rem] ${theme.blob1} rounded-full opacity-30 filter blur-[80px] animate-blob pointer-events-none`}></div>
+      <div className={`fixed bottom-[-10%] right-[-15%] w-[30rem] h-[30rem] ${theme.blob2} rounded-full opacity-30 filter blur-[80px] animate-blob animation-delay-2000 pointer-events-none`}></div>
+
+      <div className="relative flex flex-col items-center justify-start space-y-8 flex-grow z-10">
         
-        <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10 mx-4 border border-white/50">
+        <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl shadow-amber-900/5 min-h-[140px] flex items-center justify-center w-full border border-white">
           {isLoading ? (
-            <div className="flex flex-col items-center gap-2">
-                <div className={`w-8 h-8 border-4 ${currentAgeKey === '12+' || currentAgeKey === '10-12' ? 'border-indigo-300 border-t-indigo-600' : 'border-amber-300 border-t-amber-600'} rounded-full animate-spin`}></div>
-                <p className={`text-xl ${theme.text} animate-pulse mt-2`}>
+            <div className="flex flex-col items-center gap-4">
+                <div className={`w-10 h-10 border-4 ${currentAgeKey === '7-9' ? 'border-amber-200 border-t-amber-500' : 'border-indigo-200 border-t-indigo-500'} rounded-full animate-spin`}></div>
+                <p className={`text-lg font-bold ${theme.text} animate-pulse`}>
                     {language === 'mk' ? 'Смислувам нешто убаво...' : t('gratitude_screen.loading')}
                 </p>
             </div>
           ) : (
-            <p className={`text-xl font-black ${theme.text} leading-tight`}>{task}</p>
+            <p className={`text-2xl font-black ${theme.text} leading-tight`}>{task}</p>
           )}
         </div>
 
         {!isLoading && (
-            <div className="w-full max-w-sm z-10 animate-fadeIn px-2">
+            <div className="w-full animate-fadeIn">
                 <textarea
-                    className={`w-full p-4 ${theme.inputBg} border-2 ${theme.inputBorder} rounded-2xl shadow-sm text-slate-800 text-base transition-all resize-none focus:outline-none focus:ring-4 focus:ring-opacity-20 placeholder:text-slate-300 min-h-[120px]`}
+                    className={`w-full p-6 ${theme.inputBg} border-2 ${theme.inputBorder} rounded-[2rem] shadow-lg shadow-amber-900/5 text-teal-900 text-lg transition-all resize-none focus:outline-none focus:ring-4 focus:ring-amber-200/50 placeholder:text-slate-300 min-h-[160px] font-medium`}
                     rows={4}
                     placeholder={t('gratitude_screen.placeholder')}
                     value={response}
@@ -127,38 +139,23 @@ const GratitudeScreen: React.FC = () => {
             </div>
         )}
 
-        <div className="w-full pt-4 z-10 space-y-3 max-w-sm mx-4">
+        <div className="w-full pt-4 space-y-4">
             <button 
                 onClick={handleComplete} 
                 disabled={isLoading || !response.trim()} 
-                className={`w-full ${theme.button} text-white font-black py-4 px-4 rounded-2xl transition disabled:opacity-30 shadow-xl active:scale-[0.98] uppercase tracking-widest text-sm`}
+                className={`w-full ${theme.button} text-white font-black py-5 px-4 rounded-[2rem] transition disabled:opacity-30 shadow-2xl active:scale-95 uppercase tracking-[0.15em] text-lg border-b-4 border-black/10`}
             >
               {t('gratitude_screen.save_to_journal')}
             </button>
             <button 
                 onClick={() => getNewTask(true)} 
                 disabled={isLoading} 
-                className={`w-full ${theme.button2} font-black py-3 px-4 rounded-2xl transition disabled:bg-gray-200 text-xs uppercase tracking-widest`}
+                className={`w-full ${theme.button2} backdrop-blur-md font-black py-4 px-4 rounded-[1.5rem] transition disabled:bg-gray-200 text-xs uppercase tracking-[0.2em] border border-white/50`}
             >
               {t('gratitude_screen.another_button')}
             </button>
         </div>
       </div>
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 7s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-      `}</style>
     </ScreenWrapper>
   );
 };
