@@ -16,7 +16,7 @@ export enum Screen {
 export type Mood = 'Happy' | 'Sad' | 'Angry' | 'Worried' | 'Tired';
 
 export interface MoodEntry {
-  mood: Mood;
+  moods: Mood[];
   note: string;
   date: string;
 }

@@ -37,19 +37,32 @@ const MoodChart: React.FC<{ history: MoodEntry[], isAdult: boolean, isOlderTeen:
     const data = useMemo(() => {
         if (history.length === 0) return [];
         const counts: Record<string, number> = {};
-        history.forEach(entry => { counts[entry.mood] = (counts[entry.mood] || 0) + 1; });
-        const total = history.length;
+        let totalCounted = 0;
+        
+        history.forEach(entry => {
+            // Support both legacy single mood and new moods array
+            const entryMoods = entry.moods || [(entry as any).mood];
+            entryMoods.forEach((mood: Mood) => {
+                if (mood) {
+                    counts[mood] = (counts[mood] || 0) + 1;
+                    totalCounted++;
+                }
+            });
+        });
+
+        if (totalCounted === 0) return [];
+
         let accumulatedPercent = 0;
         return Object.keys(counts).map(mood => {
             const count = counts[mood];
-            const percent = count / total;
+            const percent = count / totalCounted;
             const startPercent = accumulatedPercent;
             accumulatedPercent += percent;
             return { mood: mood as Mood, count, percent, startPercent };
         });
     }, [history]);
 
-    if (history.length === 0) return null;
+    if (history.length === 0 || data.length === 0) return null;
 
     const getCoordinatesForPercent = (percent: number) => {
         const x = Math.cos(2 * Math.PI * percent);
@@ -85,7 +98,7 @@ const MoodChart: React.FC<{ history: MoodEntry[], isAdult: boolean, isOlderTeen:
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
                         <span className="text-xl font-black text-slate-800 leading-none mb-0.5">{history.length}</span>
-                        <span className="text-[0.6rem] uppercase text-slate-400 font-bold leading-none tracking-tighter">Total</span>
+                        <span className="text-[0.6rem] uppercase text-slate-400 font-bold leading-none tracking-tighter">Logs</span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-1.5 flex-grow">
@@ -156,19 +169,27 @@ const ReflectionScreen: React.FC = () => {
         ? "mb-6 p-5 bg-white rounded-2xl shadow-sm border border-slate-50 transition-all hover:shadow-md"
         : `mb-6 relative pl-4 pr-4 transform ${rotation} hover:rotate-0 transition-transform`;
 
-    if ('mood' in entry) {
+    if ('moods' in entry || 'mood' in entry) {
+        const moods = (entry as any).moods || [(entry as any).mood];
+        const moodNames = moods.map((m: Mood) => t(`moods.${m}`)).join(', ');
+
         return (
             <div className={entryContainerClass}>
                 <p className={headerDateStyle}>
                     {formatDate(entry.date)} • {formatTime(entry.date)}
                 </p>
                 <div className="flex items-start gap-4">
-                    <span className="text-xl flex-shrink-0 mt-1">{MOOD_EMOJIS[entry.mood]}</span>
+                    <div className="flex flex-col gap-1 flex-shrink-0 mt-1">
+                        {moods.slice(0, 3).map((m: Mood) => (
+                             <span key={m} className="text-xl leading-none">{MOOD_EMOJIS[m]}</span>
+                        ))}
+                    </div>
                     <div className="flex-grow min-w-0">
                         <h3 className={entryTitleStyle}>
-                            {t('reflections_screen.feeling_mood').replace('{mood}', t(`moods.${entry.mood}`))}
+                            {t('reflections_screen.feeling_mood').replace('{mood}', moodNames)}
                         </h3>
-                        {entry.note && <p className={entryBodyStyle}>"{entry.note}"</p>}
+                        {/* FIX: Cast entry to any to bypass narrowing error for 'note' property which only exists on MoodEntry */}
+                        {(entry as any).note && <p className={entryBodyStyle}>"{(entry as any).note}"</p>}
                     </div>
                 </div>
                 {(!isAdult && !isOlderTeen) && <div className="w-full h-px bg-teal-900/10 mt-4"></div>}
