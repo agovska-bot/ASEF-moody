@@ -78,46 +78,43 @@ const KindnessScreen: React.FC = () => {
   };
 
   const theme = {
-    '7-9': { blob1: 'bg-emerald-200', blob2: 'bg-rose-200', text: 'text-emerald-900', button: 'bg-emerald-500 hover:bg-emerald-600', button2: 'bg-emerald-100/50 text-emerald-800' },
-    '10-12': { blob1: 'bg-rose-100', blob2: 'bg-rose-200', text: 'text-rose-900', button: 'bg-rose-500 hover:bg-rose-600', button2: 'bg-rose-100/50 text-rose-800' },
-    '12+': { blob1: 'bg-rose-300', blob2: 'bg-emerald-300', text: 'text-rose-950', button: 'bg-rose-600 hover:bg-rose-700', button2: 'bg-rose-100/50 text-rose-800' }
+    '7-9': { blob1: 'bg-emerald-50', blob2: 'bg-emerald-100', text: 'text-emerald-800', button: 'bg-emerald-500 hover:bg-emerald-600', button2: 'bg-emerald-100 text-emerald-800' },
+    '10-12': { blob1: 'bg-rose-50', blob2: 'bg-rose-100', text: 'text-rose-800', button: 'bg-rose-500 hover:bg-rose-600', button2: 'bg-rose-100 text-rose-800' },
+    '12+': { blob1: 'bg-rose-100', blob2: 'bg-rose-200', text: 'text-rose-800', button: 'bg-rose-600 hover:bg-rose-700', button2: 'bg-rose-100 text-rose-800' }
   }[currentAgeKey];
 
   return (
     <ScreenWrapper title={screenTitle}>
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(60px, -40px) scale(1.1); }
-          66% { transform: translate(-30px, 60px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 12s infinite alternate ease-in-out; }
-      `}</style>
+      <div className="relative flex flex-col items-center justify-start pt-8 text-center space-y-8 flex-grow overflow-hidden">
+        <div className={`absolute top-20 -left-16 w-72 h-72 ${theme.blob1} rounded-full opacity-50 filter blur-xl animate-blob`}></div>
+        <div className={`absolute top-40 -right-16 w-72 h-72 ${theme.blob2} rounded-full opacity-50 filter blur-xl animate-blob animation-delay-2000`}></div>
 
-      {/* BACKGROUND BLOBS */}
-      <div className={`fixed top-[-5%] left-[-10%] w-[25rem] h-[25rem] ${theme.blob1} rounded-full opacity-30 filter blur-[70px] animate-blob pointer-events-none`}></div>
-      <div className={`fixed bottom-[-5%] right-[-10%] w-[25rem] h-[25rem] ${theme.blob2} rounded-full opacity-30 filter blur-[70px] animate-blob animation-delay-4000 pointer-events-none`}></div>
-
-      <div className="relative flex flex-col items-center justify-start space-y-10 flex-grow z-10">
-        
-        <div className="bg-white/60 backdrop-blur-xl p-10 rounded-[3rem] shadow-xl shadow-emerald-900/5 min-h-[160px] flex items-center justify-center w-full border border-white">
+        <div className="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10">
           {isLoading ? (
-            <p className={`text-xl font-bold ${theme.text} animate-pulse`}>{t('kindness_screen.loading')}</p>
+            <p className={`text-xl ${theme.text} animate-pulse`}>{t('kindness_screen.loading')}</p>
           ) : (
-            <p className={`text-2xl font-black ${theme.text} leading-snug`}>{task}</p>
+            <p className={`text-xl font-bold ${theme.text}`}>{task}</p>
           )}
         </div>
-
-        <div className="w-full pt-4 space-y-4">
-            <button onClick={handleComplete} disabled={isLoading} className={`w-full ${theme.button} text-white font-black py-6 px-4 rounded-[2rem] transition shadow-2xl active:scale-95 disabled:opacity-30 uppercase tracking-[0.15em] text-lg border-b-4 border-black/10`}>
+        <div className="w-full pt-4 z-10 space-y-3">
+            <button onClick={handleComplete} disabled={isLoading} className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-xl transition shadow-md active:scale-95 disabled:opacity-50`}>
                 {t('kindness_screen.complete_button')}
             </button>
-            <button onClick={() => getNewTask(true)} disabled={isLoading} className={`w-full ${theme.button2} backdrop-blur-md font-black py-4 px-4 rounded-[1.5rem] transition disabled:bg-gray-200 text-xs uppercase tracking-[0.2em] border border-white/50`}>
+            <button onClick={() => getNewTask(true)} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-xl transition disabled:bg-gray-200`}>
                 {t('kindness_screen.another_button')}
             </button>
         </div>
       </div>
+       <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+      `}</style>
     </ScreenWrapper>
   );
 };
