@@ -87,9 +87,21 @@ const KindnessScreen: React.FC = () => {
 
   return (
     <ScreenWrapper title={screenTitle}>
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 10s infinite alternate ease-in-out; }
+      `}</style>
       <div className="relative flex flex-col items-center justify-start pt-8 text-center space-y-8 flex-grow overflow-hidden">
-        <div className={`fixed top-[-10%] left-[-20%] w-[50rem] h-[50rem] ${theme.blob1}/40 rounded-full filter blur-[100px] animate-blob z-0 pointer-events-none`}></div>
-        <div className="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10 mx-4">
+        {/* BLOBS */}
+        <div className={`absolute top-20 -left-16 w-72 h-72 ${theme.blob1} rounded-full opacity-50 filter blur-3xl animate-blob pointer-events-none`}></div>
+        <div className={`absolute bottom-20 -right-16 w-72 h-72 ${theme.blob2} rounded-full opacity-50 filter blur-3xl animate-blob animation-delay-4000 pointer-events-none`}></div>
+        
+        <div className="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-inner min-h-[120px] flex items-center justify-center w-full max-w-sm z-10 mx-4 border border-white/50">
           {isLoading ? (
             <p className={`text-xl ${theme.text} animate-pulse`}>{t('kindness_screen.loading')}</p>
           ) : (
@@ -97,10 +109,10 @@ const KindnessScreen: React.FC = () => {
           )}
         </div>
         <div className="w-full pt-4 z-10 space-y-3 max-w-sm mx-4">
-            <button onClick={handleComplete} disabled={isLoading} className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-lg transition shadow-md disabled:bg-gray-400`}>
+            <button onClick={handleComplete} disabled={isLoading} className={`w-full ${theme.button} text-white font-bold py-3 px-4 rounded-lg transition shadow-md disabled:bg-gray-400 active:scale-95`}>
                 {t('kindness_screen.complete_button')}
             </button>
-            <button onClick={() => getNewTask(true)} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-200`}>
+            <button onClick={() => getNewTask(true)} disabled={isLoading} className={`w-full ${theme.button2} font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-200 active:scale-95`}>
                 {t('kindness_screen.another_button')}
             </button>
         </div>

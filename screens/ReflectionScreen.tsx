@@ -188,7 +188,6 @@ const ReflectionScreen: React.FC = () => {
                         <h3 className={entryTitleStyle}>
                             {t('reflections_screen.feeling_mood').replace('{mood}', moodNames)}
                         </h3>
-                        {/* FIX: Cast entry to any to bypass narrowing error for 'note' property which only exists on MoodEntry */}
                         {(entry as any).note && <p className={entryBodyStyle}>"{(entry as any).note}"</p>}
                     </div>
                 </div>
@@ -249,6 +248,12 @@ const ReflectionScreen: React.FC = () => {
     );
   }
 
+  const themeColors = {
+    '7-9': { blob1: 'bg-teal-50', blob2: 'bg-amber-50' },
+    '10-12': { blob1: 'bg-indigo-50', blob2: 'bg-cyan-50' },
+    '12+': { blob1: 'bg-slate-100', blob2: 'bg-indigo-50' }
+  }[ageGroup || '7-9'];
+
   return (
     <ScreenWrapper title={screenTitle}>
       <style>{`
@@ -257,10 +262,23 @@ const ReflectionScreen: React.FC = () => {
         .lined-paper { background-color: #fdfbf7; background-image: linear-gradient(#e5e5e5 1px, transparent 1px); background-size: 100% 2.5rem; }
         .notebook-holes { background-image: radial-gradient(#f3f4f6 20%, transparent 20%); background-size: 100% 40px; background-position: 10px 10px; }
         .story-scroll { scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; }
+        
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 10s infinite alternate ease-in-out; }
       `}</style>
-      <div className="flex flex-col flex-grow h-full">
-        <div className="mb-4"> <PointsSummary /> </div>
-        <div className={`flex-grow overflow-hidden flex flex-col relative ${mainContainerClass}`}>
+      <div className="flex flex-col flex-grow h-full relative">
+        
+        {/* BACKGROUND BLOBS */}
+        <div className={`absolute top-20 -left-16 w-72 h-72 ${themeColors.blob1} rounded-full opacity-60 filter blur-3xl animate-blob pointer-events-none`}></div>
+        <div className={`absolute bottom-20 -right-16 w-72 h-72 ${themeColors.blob2} rounded-full opacity-60 filter blur-3xl animate-blob animation-delay-4000 pointer-events-none`}></div>
+
+        <div className="mb-4 z-10"> <PointsSummary /> </div>
+        <div className={`flex-grow overflow-hidden flex flex-col relative z-10 ${mainContainerClass}`}>
             {!isAdult && !isOlderTeen && <div className="absolute left-0 top-0 bottom-0 w-8 z-10 notebook-holes border-r border-gray-200/50"></div>}
             <div className={`p-6 pb-0 relative z-0 ${(!isAdult && !isOlderTeen) ? 'pl-10' : ''}`}>
                 {isAdult || isOlderTeen ? (
