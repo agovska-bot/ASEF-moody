@@ -112,22 +112,13 @@ const HomeScreen: React.FC = () => {
           </button>
         )}
         
-        <div className="flex items-center gap-4 mt-4">
+        <div className="mt-4">
           <button 
             onClick={resetApp}
             className="text-[10px] uppercase font-bold tracking-widest text-gray-400 hover:text-red-500 transition-colors"
           >
             {t('home.reset_button_text')}
           </button>
-          <span className="text-gray-200">|</span>
-          <a 
-            href="/logo-branding.svg" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-[10px] uppercase font-bold tracking-widest text-teal-500 hover:text-teal-700 transition-colors"
-          >
-            Преземи Лого 🎨
-          </a>
         </div>
       </div>
     </div>
