@@ -106,23 +106,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const fetchTranslations = async () => {
         try {
             const [en, mk, tr] = await Promise.all([
-                fetch('/locales/en.json').then(res => {
-                    if (!res.ok) throw new Error('en.json failed');
-                    return res.json();
-                }),
-                fetch('/locales/mk.json').then(res => {
-                    if (!res.ok) throw new Error('mk.json failed');
-                    return res.json();
-                }),
-                fetch('/locales/tr.json').then(res => {
-                    if (!res.ok) throw new Error('tr.json failed');
-                    return res.json();
-                })
+                fetch('/locales/en.json').then(res => res.json()),
+                fetch('/locales/mk.json').then(res => res.json()),
+                fetch('/locales/tr.json').then(res => res.json())
             ]);
             setTranslationsData({ en, mk, tr });
         } catch (error) {
             console.error("Failed to load translation files:", error);
-            // Provide a minimal fallback so the app doesn't hang in a loading state
             setTranslationsData({ en: {}, mk: {}, tr: {} }); 
         }
     };

@@ -96,10 +96,10 @@ const HomeScreen: React.FC = () => {
   const footerContent = (
     <div className="pb-4">
       <p className="text-sm">
-        by <span className="font-semibold text-teal-700">Damjan Agovski</span>
+        by <span className="font-semibold text-teal-700">Nikolas Georgievski & Damjan Agovski</span>
       </p>
       <p className="text-xs mt-1">
-        ASEF 2026
+        FIRSTEP Macedonia Project Competition 2025
       </p>
       
       <div className="flex flex-col gap-3 mt-6 items-center w-full">
@@ -112,14 +112,12 @@ const HomeScreen: React.FC = () => {
           </button>
         )}
         
-        <div className="mt-4">
-          <button 
-            onClick={resetApp}
-            className="text-[10px] uppercase font-bold tracking-widest text-gray-400 hover:text-red-500 transition-colors"
-          >
-            {t('home.reset_button_text')}
-          </button>
-        </div>
+        <button 
+          onClick={resetApp}
+          className="text-[10px] uppercase font-bold tracking-widest text-gray-400 hover:text-red-500 transition-colors mt-4"
+        >
+          {t('home.reset_button_text')}
+        </button>
       </div>
     </div>
   );
