@@ -22,12 +22,14 @@ const App: React.FC = () => {
     switch (ageGroup) {
       case '7-9': return 'bg-amber-50/50';
       case '10-12': return 'bg-slate-50';
-      case '12+': return 'bg-slate-50'; // Changed from slate-100 to slate-50 for a brighter, professional feel
+      case '12+': return 'bg-slate-50';
       default: return 'bg-slate-50';
     }
   }
 
-  if (!language || !birthDate) {
+  // ПРОВЕРКА: Ова е најважниот дел. Ако јазикот или роденденот не се поставени во меморијата,
+  // корисникот НИКОГАШ не може да ги види активностите, туку секогаш оди на WelcomeScreen.
+  if (!language || !birthDate || language === null || birthDate === null) {
     return (
       <div className="bg-slate-50 min-h-screen font-sans">
         <WelcomeScreen />
@@ -56,6 +58,9 @@ const App: React.FC = () => {
         return <StoryCreatorScreen />;
       case Screen.RapBattle:
         return <RapBattleScreen />;
+      case Screen.LanguageSelection:
+      case Screen.AgeSelection:
+        return <WelcomeScreen />;
       default:
         return <HomeScreen />;
     }

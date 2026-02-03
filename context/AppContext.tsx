@@ -44,22 +44,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageStorage] = useLocalStorage<Language | null>('language', null);
   const [birthDate, setBirthDateStorage] = useLocalStorage<string | null>('birthDate', null);
-  
   const [translationsData, setTranslationsData] = useState<Record<string, any> | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  // Persistence for active tasks (Kindness, Move, Gratitude)
-  const [activeTasks, setActiveTasks] = useLocalStorage<Record<string, string | null>>('activeTasks', {
-    kindness: null,
-    move: null,
-    gratitude: null
-  });
-
-  const setActiveTask = useCallback((category: string, task: string | null) => {
-    setActiveTasks(prev => ({ ...prev, [category]: task }));
-  }, [setActiveTasks]);
-
-  // Derived state for age
   const age = useMemo(() => {
     if (!birthDate) return null;
     const today = new Date();
@@ -72,35 +59,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return age;
   }, [birthDate]);
 
+  const ageGroup = useMemo((): AgeGroup | null => {
+    if (age === null) return null;
+    if (age < 10) return '7-9';
+    if (age < 13) return '10-12';
+    return '12+';
+  }, [age]);
+
   const isBirthdayToday = useMemo(() => {
     if (!birthDate) return false;
     const today = new Date();
     const birth = new Date(birthDate);
     return today.getDate() === birth.getDate() && today.getMonth() === birth.getMonth();
   }, [birthDate]);
-
-  const ageGroup = useMemo((): AgeGroup | null => {
-    if (age === null) return null;
-    if (age < 9) return '7-9';
-    if (age < 13) return '10-12';
-    return '12+';
-  }, [age]);
-
-  useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const installApp = useCallback(async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
-  }, [deferredPrompt]);
 
   useEffect(() => {
     const fetchTranslations = async () => {
@@ -112,21 +83,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ]);
             setTranslationsData({ en, mk, tr });
         } catch (error) {
-            console.error("Failed to load translation files:", error);
+            console.error("Error loading translations:", error);
             setTranslationsData({ en: {}, mk: {}, tr: {} }); 
         }
     };
     fetchTranslations();
   }, []);
 
-  const determineInitialScreen = () => {
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const installApp = useCallback(async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  }, [deferredPrompt]);
+
+  // КЛУЧНА ПРОМЕНА: Функција за прецизно одредување на првиот екран
+  const determineInitialScreen = useCallback(() => {
+    // Проверуваме директно во localStorage за да бидеме сигурни
     const savedLang = localStorage.getItem('language');
     const savedBirth = localStorage.getItem('birthDate');
-    if (!savedLang || savedLang === 'null' || savedLang === 'undefined') return Screen.LanguageSelection;
-    if (!savedBirth || savedBirth === 'null' || savedBirth === 'undefined') return Screen.AgeSelection;
+    
+    // Ако нешто фали, одиме на почеток
+    if (!savedLang || savedLang === 'null') return Screen.LanguageSelection;
+    if (!savedBirth || savedBirth === 'null') return Screen.AgeSelection;
+    
     return Screen.Home;
-  };
-  
+  }, []);
+
   const [currentScreen, setCurrentScreen] = useState<Screen>(determineInitialScreen());
   const [moodHistory, setMoodHistory] = useLocalStorage<MoodEntry[]>('moodHistory', []);
   const [reflections, setReflections] = useLocalStorage<ReflectionEntry[]>('reflections', []);
@@ -135,43 +130,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [storyInProgress, setStoryInProgress] = useState<string[]>([]);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
-
-  const streakDays = useMemo(() => {
-    if (moodHistory.length === 0) return 0;
-    const dates = moodHistory
-      .map(entry => {
-        const d = new Date(entry.date);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime();
-      })
-      .sort((a, b) => b - a);
-    const uniqueDates = Array.from(new Set(dates));
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    if (uniqueDates[0] < yesterday.getTime()) return 0;
-    let streak = 0;
-    let expectedDate = uniqueDates[0];
-    for (let i = 0; i < uniqueDates.length; i++) {
-        if (uniqueDates[i] === expectedDate) {
-            streak++;
-            const nextExpected = new Date(expectedDate);
-            nextExpected.setDate(nextExpected.getDate() - 1);
-            expectedDate = nextExpected.getTime();
-        } else {
-            break;
-        }
-    }
-    return streak;
-  }, [moodHistory]);
-  
-  const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  }, []);
+  const [activeTasks, setActiveTasks] = useLocalStorage<Record<string, string | null>>('activeTasks', { gratitude: null, move: null, kindness: null, calm: null });
 
   const t = useCallback((key: string, fallback?: string): any => {
     if (!translationsData) return fallback || key;
@@ -198,13 +157,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addMood = useCallback((mood: MoodEntry) => {
     setMoodHistory(prevHistory => [...prevHistory, mood]);
-    showToast(t('mood_check_screen.save_toast', 'Mood saved! ✨'));
-  }, [setMoodHistory, showToast, t]);
+  }, [setMoodHistory]);
 
   const addReflection = useCallback((reflection: ReflectionEntry) => {
     setReflections(prev => [...prev, reflection]);
-    showToast(t('reflections_screen.save_toast', 'Journal updated! 📝'));
-  }, [setReflections, showToast, t]);
+  }, [setReflections]);
 
   const addStory = useCallback((story: StoryEntry) => {
     setStories(prev => [...prev, story]);
@@ -216,55 +173,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       [category]: prevPoints[category] + amount,
     }));
   }, [setPoints]);
-  
-  const startNewStory = useCallback((chat: Chat, firstSentence: string) => {
-    setChatSession(chat);
-    setStoryInProgress([firstSentence]);
-  }, []);
 
-  const continueStory = useCallback((userSentence: string, aiSentence: string) => {
-    setStoryInProgress(prev => [...prev, userSentence, aiSentence]);
-  }, []);
-
-  const finishStory = useCallback((finalSentence: string) => {
-    if (storyInProgress.length === 0) return;
-    const finalStoryParts = [...storyInProgress, finalSentence];
-    const title = finalStoryParts[0].split(' ').slice(0, 5).join(' ') + '...';
-    const newStory: StoryEntry = {
-        title,
-        content: finalStoryParts,
-        date: new Date().toISOString(),
-    };
-    addStory(newStory);
-    setStoryInProgress([]);
-    setChatSession(null);
-  }, [storyInProgress, addStory]);
-
-  const totalPoints = useMemo(() => {
-    return points.gratitude + points.physical + points.kindness + points.creativity;
-  }, [points]);
-
-  const resetApp = useCallback(() => {
-    setLanguageStorage(null);
-    setBirthDateStorage(null);
-    setMoodHistory([]);
-    setReflections([]);
-    setStories([]);
-    setPoints({ gratitude: 0, physical: 0, kindness: 0, creativity: 0 });
-    setStoryInProgress([]);
-    setChatSession(null);
-    setActiveTasks({ kindness: null, move: null, gratitude: null });
-    setCurrentScreen(Screen.LanguageSelection);
-    localStorage.clear();
-  }, [setLanguageStorage, setBirthDateStorage, setMoodHistory, setReflections, setStories, setPoints, setActiveTasks]);
-
-  if (!translationsData) {
-      return (
-          <div className="flex items-center justify-center min-h-screen bg-amber-50 text-teal-700 font-black uppercase tracking-widest text-xl">
-              Moody Buddy Loading...
-          </div>
-      )
-  }
+  const setActiveTask = useCallback((category: string, task: string | null) => {
+    setActiveTasks(prev => ({ ...prev, [category]: task }));
+  }, [setActiveTasks]);
 
   return (
     <AppContext.Provider value={{
@@ -278,10 +190,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addStory,
       points,
       addPoints,
-      totalPoints,
+      totalPoints: points.gratitude + points.physical + points.kindness + points.creativity,
       toastMessage,
-      showToast,
-      streakDays,
+      showToast: (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(null), 3000); },
+      streakDays: 0, 
       birthDate,
       setBirthDate,
       age,
@@ -291,10 +203,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setLanguage,
       storyInProgress,
       chatSession,
-      startNewStory,
-      continueStory,
-      finishStory,
-      resetApp,
+      startNewStory: (chat, first) => { setChatSession(chat); setStoryInProgress([first]); },
+      continueStory: (user, ai) => { setStoryInProgress(prev => [...prev, user, ai]); },
+      finishStory: (final) => { 
+        const story: StoryEntry = {
+          title: `Adventure ${new Date().toLocaleDateString()}`,
+          content: [...storyInProgress, final],
+          date: new Date().toISOString()
+        };
+        setStories(prev => [...prev, story]);
+        setStoryInProgress([]);
+        setChatSession(null);
+      },
+      resetApp: () => { 
+        localStorage.clear(); 
+        window.location.reload(); 
+      },
       t,
       isInstallable: !!deferredPrompt,
       installApp,
@@ -308,8 +232,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
 export const useAppContext = () => {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
+  if (!context) throw new Error('useAppContext must be used within AppProvider');
   return context;
 };
