@@ -25,7 +25,7 @@ interface AppContextType {
   ageGroup: AgeGroup | null;
   isBirthdayToday: boolean;
   language: Language | null;
-  setLanguage: (language: Language) => void;
+  setLanguage: (language: Language | null) => void;
   storyInProgress: string[];
   chatSession: Chat | null;
   startNewStory: (chat: Chat, firstSentence: string) => void;
@@ -109,13 +109,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [deferredPrompt]);
 
-  // КЛУЧНА ПРОМЕНА: Функција за прецизно одредување на првиот екран
   const determineInitialScreen = useCallback(() => {
-    // Проверуваме директно во localStorage за да бидеме сигурни
     const savedLang = localStorage.getItem('language');
     const savedBirth = localStorage.getItem('birthDate');
     
-    // Ако нешто фали, одиме на почеток
     if (!savedLang || savedLang === 'null') return Screen.LanguageSelection;
     if (!savedBirth || savedBirth === 'null') return Screen.AgeSelection;
     
@@ -145,9 +142,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return result;
   }, [language, translationsData]);
   
-  const setLanguage = useCallback((lang: Language) => {
+  const setLanguage = useCallback((lang: Language | null) => {
     setLanguageStorage(lang);
-    setCurrentScreen(Screen.AgeSelection);
+    if (lang === null) {
+      setCurrentScreen(Screen.LanguageSelection);
+    } else {
+      setCurrentScreen(Screen.AgeSelection);
+    }
   }, [setLanguageStorage]);
 
   const setBirthDate = useCallback((date: string) => {

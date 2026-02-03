@@ -49,9 +49,7 @@ const FlagTR: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 const BuddyLogoHeader: React.FC = () => {
     return (
       <div className="flex flex-row items-center justify-center gap-1 animate-fadeIn relative z-20 py-4 w-full">
-        {/* Logo Container - Big Mascot and Plus */}
         <div className="relative flex items-center justify-center h-36 w-36">
-          {/* Adjusted viewBox to 85x55 to crop empty space at the bottom, ensuring vertical centering of the artwork */}
           <svg viewBox="0 0 85 55" className="w-full h-full drop-shadow-md" xmlns="http://www.w3.org/2000/svg">
             <style>{`
               @keyframes blink-header { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
@@ -68,7 +66,6 @@ const BuddyLogoHeader: React.FC = () => {
             </g>
           </svg>
         </div>
-        {/* Text Container - Flex centered vertically with the logo */}
         <div className="flex flex-col items-start leading-[0.8] ml-2">
             <span className="text-[3.2rem] font-black text-[#004D40] tracking-tighter">Moody</span>
             <span className="text-[3.2rem] font-black text-[#004D40] tracking-tighter">Buddy</span>
@@ -116,6 +113,12 @@ const WelcomeScreen: React.FC = () => {
     if (m < 0 || (m === 0 && today.getDate() < dateObj.getDate())) age--;
     if (age < 3) { setError(t('age_selection.too_young')); return; }
     setBirthDate(`${parts[2]}-${parts[1]}-${parts[0]}`);
+  };
+
+  const handleBackToLanguage = () => {
+    setLanguage(null);
+    setDisplayDate('');
+    setError(null);
   };
 
   return (
@@ -205,7 +208,7 @@ const WelcomeScreen: React.FC = () => {
                   </button>
                   
                   <button 
-                      onClick={() => { setLanguage(null as any); setDisplayDate(''); setError(null); }} 
+                      onClick={handleBackToLanguage} 
                       className="w-full text-[13px] text-teal-400 font-black uppercase tracking-[0.2em] mt-6 hover:text-teal-600 transition-colors"
                   >
                       ← {t('language_selection.title')}
